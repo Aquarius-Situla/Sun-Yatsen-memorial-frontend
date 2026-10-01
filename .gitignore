@@ -1,0 +1,11 @@
+# Environment & credentials
+/api/env.js
+/env.js
+/api/prohibited_words/private.json
+
+# Dependencies & Build artifacts
+node_modules/
+dist/
+.DS_Store
+Thumbs.db
+*.log
