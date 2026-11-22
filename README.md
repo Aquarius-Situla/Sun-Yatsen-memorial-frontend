@@ -20,13 +20,18 @@ The static frontend application for **私立中山紀念堂 (Private Sun Yat-sen
 ```text
 frontend/
 ├── .github/workflows/
+│   ├── deploy-pages.yml            # Optional Cloudflare Pages CI deployment
 │   └── docker-image.yml            # Multi-arch GHCR Docker build & push workflow
 ├── index.html                      # Main application entry point (supports #admin and #captcha hashes)
+├── _headers                        # Cloudflare Pages security & cache headers
+├── _redirects                      # Cloudflare Pages URL redirects (/admin, /captcha)
 ├── Dockerfile                      # Nginx Alpine static container image
 ├── .dockerignore
 ├── docker/
 │   ├── nginx.conf                  # Nginx static serving, gzip & /admin redirect config
 │   └── 40-env-config.sh            # Startup script injecting WORKER_API into api/env.js
+├── scripts/
+│   └── build-pages.sh              # Assembles clean ./dist bundle & injects WORKER_API for CF Pages
 ├── api/
 │   ├── env.example.js              # Runtime configuration template (window.ENV.WORKER_API)
 │   └── prohibited_words/
@@ -109,13 +114,19 @@ Then visit `http://localhost:8080`.
 
 ### Cloudflare Pages (Recommended)
 
+#### Option 1: Cloudflare Pages Git Integration
 1. Log in to the [Cloudflare Dashboard](https://dash.cloudflare.com/) and navigate to **Compute (Workers) > Workers & Pages**.
 2. Click **Create application > Pages > Connect to Git** and select `Sun-Yatsen-memorial-frontend`.
 3. Configure the build settings:
    - **Framework preset**: `None`
-   - **Build command**: *(leave empty — pure static site)*
-   - **Build output directory**: `/`
-4. Provision `api/env.js` (or inject `window.ENV.WORKER_API`) pointing to your deployed Worker URL.
+   - **Build command**: `sh scripts/build-pages.sh`
+   - **Build output directory**: `dist`
+4. Add an environment variable `WORKER_API` (e.g., `https://your-worker-api.workers.dev`) under **Settings > Environment variables**.
+
+[scripts/build-pages.sh](scripts/build-pages.sh) outputs a clean static bundle to `dist/` (excluding `Dockerfile`, `docker/`, `tools/`, and `README.md`), injects `dist/api/env.js` from `WORKER_API`, and includes [_redirects](_redirects) (`/admin -> /pages/admin/`) and [_headers](_headers) (`no-store` on `/api/env.js`, security headers).
+
+#### Option 2: GitHub Actions Deploy
+[.github/workflows/deploy-pages.yml](.github/workflows/deploy-pages.yml) can also deploy `dist/` automatically when `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`, `CF_PAGES_PROJECT`, and `WORKER_API` are configured in GitHub Secrets/Variables (if unset, the deploy step skips cleanly).
 
 ### Docker & GitHub Container Registry (`ghcr.io`)
 

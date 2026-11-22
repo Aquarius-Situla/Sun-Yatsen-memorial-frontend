@@ -3,6 +3,9 @@
 .gitignore
 .dockerignore
 Dockerfile
+scripts/
+_headers
+_redirects
 tools/
 api/env.js
 api/prohibited_words/private.json

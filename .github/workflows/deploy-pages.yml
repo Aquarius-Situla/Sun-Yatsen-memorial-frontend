@@ -1,0 +1,54 @@
+# ============================================================================
+# Private Sun Yat-sen Memorial Hall — Cloudflare Pages Deployment CI
+# ============================================================================
+# Builds ./dist via scripts/build-pages.sh and optionally deploys to Cloudflare
+# Pages when CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID, and CF_PAGES_PROJECT
+# are configured in repository secrets. Skips cleanly if unconfigured (e.g.
+# when using Cloudflare Pages native Git integration).
+# ============================================================================
+
+name: Deploy to Cloudflare Pages
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  pages:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      deployments: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check Cloudflare Pages secrets
+        id: check
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CF_PAGES_PROJECT: ${{ secrets.CF_PAGES_PROJECT }}
+        run: |
+          if [ -n "$CLOUDFLARE_API_TOKEN" ] && [ -n "$CLOUDFLARE_ACCOUNT_ID" ] && [ -n "$CF_PAGES_PROJECT" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "Cloudflare Pages secrets not set; skipping CI deploy (native CF Pages Git integration can still be used)."
+          fi
+
+      - name: Build Cloudflare Pages bundle
+        env:
+          WORKER_API: ${{ secrets.WORKER_API || vars.WORKER_API }}
+        run: sh scripts/build-pages.sh
+
+      - name: Deploy to Cloudflare Pages
+        if: steps.check.outputs.enabled == 'true'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy dist --project-name=${{ secrets.CF_PAGES_PROJECT }}
