@@ -7,7 +7,7 @@
  * 3. All prose is written in English.
  * ============================================================================ */
 
-import { getCurrentLang } from './i18n.js?v=20260907f';
+import { t } from './i18n.js';
 
 /* ============================================================================
  * Device Fingerprint Analysis
@@ -183,28 +183,15 @@ export function initDeviceLayout() {
  * glass rotation prompt. iPads and Desktop PCs are exempt from this blocker.
  * ============================================================================ */
 
-const ORIENTATION_TEXTS = {
-    tc: {
-        title: '請將裝置旋轉至直向',
-        subtitle: '為提供最佳的瞻仰行禮體驗，本展廳手機版僅支援直向模式。'
-    },
-    sc: {
-        title: '请将设备旋转至竖屏',
-        subtitle: '为提供最佳的瞻仰礼仪体验，本展厅手机版仅支持竖屏模式。'
-    }
-};
-
 let orientationGuardEl = null;
 
 function updateOrientationGuardText() {
     if (!orientationGuardEl) return;
-    const lang = (typeof getCurrentLang === 'function') ? getCurrentLang() : 'tc';
-    const texts = ORIENTATION_TEXTS[lang] || ORIENTATION_TEXTS.tc;
 
     const titleEl = orientationGuardEl.querySelector('.guard-title');
     const descEl = orientationGuardEl.querySelector('.guard-desc');
-    if (titleEl) titleEl.textContent = texts.title;
-    if (descEl) descEl.textContent = texts.subtitle;
+    if (titleEl) titleEl.textContent = t('orientation.title');
+    if (descEl) descEl.textContent = t('orientation.subtitle');
 }
 
 function createOrientationGuard() {
@@ -285,6 +272,9 @@ export function initOrientationGuard() {
 
     /* Execute initial state check */
     checkOrientationState();
+
+    if (window.__orientationGuardBound) return;
+    window.__orientationGuardBound = true;
 
     /* Listen to viewport resize and device orientation changes */
     window.addEventListener('resize', checkOrientationState, { passive: true });

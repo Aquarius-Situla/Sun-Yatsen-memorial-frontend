@@ -7,13 +7,16 @@
  * 3. All prose is written in English.
  * ============================================================================ */
 
-import { isDesktopLayout } from './device-detect.js?v=20260907f';
+import { isDesktopLayout } from './device-detect.js';
+import { getPageSignal } from '../core/lifecycle.js';
 
 export function initIOSNavTransition(options = {}) {
     /* Desktop isolation guard: desktop split router handles desktop navigation */
     if (isDesktopLayout()) {
         return;
     }
+
+    const pageSignal = getPageSignal();
 
     const {
         backButtonSelector = '#nav-back-link, .nav-back-link',
@@ -43,6 +46,12 @@ export function initIOSNavTransition(options = {}) {
         const link = rowLinks[i];
         const href = link.getAttribute('href');
         if (!href || href.startsWith('#') || href.startsWith('javascript:')) continue;
+        if (link.getAttribute('target') === '_blank') continue;
+        try {
+            if (new URL(href, window.location.href).origin !== window.location.origin) continue;
+        } catch (err) {
+            continue;
+        }
 
         link.addEventListener('click', function(e) {
             if (e.metaKey || e.ctrlKey || e.shiftKey || e.which === 2) return;
@@ -58,7 +67,7 @@ export function initIOSNavTransition(options = {}) {
 
             /* Navigate cleanly without premature parent shifting */
             window.location.href = href;
-        });
+        }, { signal: pageSignal });
     }
 
     /* ========================================================================
@@ -183,7 +192,7 @@ export function initIOSNavTransition(options = {}) {
 
         btn.addEventListener('touchstart', function() {
             btn.style.opacity = '0.35';
-        }, { passive: true });
+        }, { passive: true, signal: pageSignal });
 
         btn.addEventListener('touchend', function() {
             if (!isNavigating) {
@@ -191,7 +200,7 @@ export function initIOSNavTransition(options = {}) {
                     if (!isNavigating) btn.style.opacity = '';
                 }, 150);
             }
-        }, { passive: true });
+        }, { passive: true, signal: pageSignal });
 
         btn.addEventListener('click', function(e) {
             if (e.metaKey || e.ctrlKey || e.shiftKey || e.which === 2) return;
@@ -201,7 +210,7 @@ export function initIOSNavTransition(options = {}) {
                 btn.style.opacity = '0.35';
                 triggerPopTransition(url);
             }
-        });
+        }, { signal: pageSignal });
     }
 
     const backButtons = document.querySelectorAll(backButtonSelector);
@@ -236,5 +245,5 @@ export function initIOSNavTransition(options = {}) {
             }
             isNavigating = false;
         }
-    });
+    }, { signal: pageSignal });
 }

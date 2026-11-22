@@ -7,343 +7,121 @@
  * 3. All prose is written in English.
  * ============================================================================ */
 
-import { getCurrentLang, TAB_DEFINITIONS, syncTabBarLabels } from './i18n.js?v=20260907f';
-import { TAB_ICONS } from './tab-bar.js?v=20260907f';
-import { showActivityIndicator, hideActivityIndicator } from './activity-indicator.js?v=20260907f';
-import { getVisitorUuid, generateIdenticonSvg } from './identicon.js?v=20260907f';
-import { isMobileLayout, isDesktopLayout } from './device-detect.js?v=20260907f';
+import { t, applyTranslations } from './i18n.js';
+import { TAB_ICONS } from './tab-bar.js';
+import { showActivityIndicator, hideActivityIndicator } from './activity-indicator.js';
+import { getVisitorUuid, generateIdenticonSvg } from './identicon.js';
+import { isMobileLayout, isDesktopLayout } from './device-detect.js';
+import { resetPageLifecycle } from '../core/lifecycle.js';
+import { resolveSiteUrl, getTabFromUrl, isDetailSubpage, SEARCH_INDEX } from '../core/routes.js';
 
-/* ============================================================================
- * Global Search Index (Covers all memorial topics, exhibits, and settings)
- * ============================================================================ */
-const SEARCH_INDEX = [
-    {
-        id: 'home',
-        titleTc: '紀念大廳 · 瞻仰行禮',
-        titleSc: '纪念大厅 · 瞻仰行礼',
-        categoryTc: '主頁',
-        categorySc: '主页',
-        url: 'index.html',
-        icon: '🏛️',
-        keywords: ['主頁', '主页', '行禮', '行礼', '遺像', '遗像', '遺囑', '遗嘱', '三鞠躬', '首頁', '首页']
-    },
-    {
-        id: 'announcement',
-        titleTc: '最新館務公告與動態',
-        titleSc: '最新馆务公告与动态',
-        categoryTc: '公告',
-        categorySc: '公告',
-        url: 'pages/announcement/announcement.html',
-        icon: '📢',
-        keywords: ['公告', '動態', '动态', '最新', '通知', '開放', '开放', '系統', '系统']
-    },
-    {
-        id: 'library',
-        titleTc: '文獻資料庫總覽',
-        titleSc: '文献数据库总览',
-        categoryTc: '資料庫',
-        categorySc: '数据库',
-        url: 'pages/library/library.html',
-        icon: '📚',
-        keywords: ['資料庫', '数据库', '文獻', '文献', '檔案', '档案', '史料']
-    },
-    {
-        id: 'biography',
-        titleTc: '國父生平傳記與年譜',
-        titleSc: '国父生平传记与年谱',
-        categoryTc: '傳記',
-        categorySc: '传记',
-        url: 'pages/biography/biography.html',
-        icon: '📜',
-        keywords: ['生平', '傳記', '传记', '年譜', '年谱', '孫中山', '孙中山', '孫文', '孙文', '總理', '总理', '三民主義', '三民主义']
-    },
-    {
-        id: 'xinhai',
-        titleTc: '辛亥革命特展 · 走向共和',
-        titleSc: '辛亥革命特展 · 走向共和',
-        categoryTc: '特展',
-        categorySc: '特展',
-        url: 'events/xinhai/xinhai.html',
-        icon: '⚔️',
-        keywords: ['辛亥', '革命', '武昌', '起義', '起义', '共和', '中華民國', '中华民国', '推翻帝制']
-    },
-    {
-        id: 'whampoa',
-        titleTc: '黃埔建軍特展 · 崢嶸歲月',
-        titleSc: '黄埔建军特展 · 峥嵘岁月',
-        categoryTc: '特展',
-        categorySc: '特展',
-        url: 'events/whampoa/whampoa.html',
-        icon: '🎖️',
-        keywords: ['黃埔', '黄埔', '軍校', '军校', '建軍', '建军', '校歌', '東征', '东征', '北伐', '陸軍', '陆军']
-    },
-    {
-        id: 'mayfourth',
-        titleTc: '五四運動特展 · 思想新潮',
-        titleSc: '五四运动特展 · 思想新潮',
-        categoryTc: '特展',
-        categorySc: '特展',
-        url: 'events/mayfourth/mayfourth.html',
-        icon: '🕊️',
-        keywords: ['五四', '運動', '运动', '新文化', '德先生', '賽先生', '赛先生', '青年', '學生', '学生']
-    },
-    {
-        id: 'militaries',
-        titleTc: '革命軍事歷程 · 抗戰勝利',
-        titleSc: '革命军事历程 · 抗战胜利',
-        categoryTc: '特展',
-        categorySc: '特展',
-        url: 'events/militaries/militaries.html',
-        icon: '🛡️',
-        keywords: ['軍事', '军事', '抗戰', '抗战', '三軍', '三军', '勝利', '胜利', '國軍', '国军']
-    },
-    {
-        id: 'yatsen-birth',
-        titleTc: '國父誕辰紀念特展',
-        titleSc: '国父诞辰纪念特展',
-        categoryTc: '紀念',
-        categorySc: '纪念',
-        url: 'events/yatsen/yatsen-birth.html',
-        icon: '🎂',
-        keywords: ['誕辰', '诞辰', '生日', '11月12日', '十一月十二日']
-    },
-    {
-        id: 'yatsen-passing',
-        titleTc: '國父逝世紀念 · 植樹節',
-        titleSc: '国父逝世纪念 · 植树节',
-        categoryTc: '紀念',
-        categorySc: '纪念',
-        url: 'events/yatsen/yatsen-passing.html',
-        icon: '🌲',
-        keywords: ['逝世', '3月12日', '三月十二日', '植樹節', '植树节']
-    },
-    {
-        id: 'language',
-        titleTc: '語言偏好設定 (正體/簡化字)',
-        titleSc: '语言偏好设置 (正体/简化字)',
-        categoryTc: '設定',
-        categorySc: '设置',
-        url: 'pages/library/language.html',
-        icon: '🌐',
-        keywords: ['語言', '语言', '繁體', '繁体', '簡體', '简体', '正體', '正体', '字體', '字体']
-    },
-    {
-        id: 'settings',
-        titleTc: '系統偏好與設定',
-        titleSc: '系统偏好与设置',
-        categoryTc: '設定',
-        categorySc: '设置',
-        url: 'pages/settings/settings.html',
-        icon: '⚙️',
-        keywords: ['設定', '设置', '偏好', '系統', '系统']
-    },
-    {
-        id: 'about',
-        titleTc: '關於本館與聲明',
-        titleSc: '关于本馆与声明',
-        categoryTc: '關於',
-        categorySc: '关于',
-        url: 'pages/about/about.html',
-        icon: 'ℹ️',
-        keywords: ['關於', '关于', '聲明', '声明', '本館', '本馆', '宗旨', '更新日誌', '更新日志']
-    },
-    {
-        id: 'thanks',
-        titleTc: '特別鳴謝名錄',
-        titleSc: '特别鸣谢名录',
-        categoryTc: '鳴謝',
-        categorySc: '鸣谢',
-        url: 'pages/thanks/thanks.html',
-        icon: '🙏',
-        keywords: ['鳴謝', '鸣谢', '感謝', '感谢', '貢獻', '贡献', '志工', '名錄', '名录']
-    }
-];
-
-/* ============================================================================
- * Language Strings Dictionary for Desktop Sidebar
- * ============================================================================ */
-const SIDEBAR_STRINGS = {
-    tc: {
-        brand: '私立中山紀念堂',
-        searchPlaceholder: '搜尋',
-        menuHeader: '導航',
-        exhibitsHeader: '歷史特展',
-        home: '主頁',
-        announcement: '最新公告',
-        library: '文獻資料庫',
-        settings: '系統設定',
-        exhibitXinhai: '辛亥革命風雲',
-        exhibitWhampoa: '黃埔建軍歲月',
-        exhibitMayfourth: '五四新文化運動',
-        exhibitBiography: '國父生平傳記',
-        statusAttendance: '總參典：',
-        unitAttendance: '人次',
-        noResults: '無相符搜尋結果',
-        visitorLabel: '訪客識別碼',
-        copiedHint: '已複製！'
-    },
-    sc: {
-        brand: '私立中山纪念堂',
-        searchPlaceholder: '搜索',
-        menuHeader: '导航',
-        exhibitsHeader: '历史特展',
-        home: '主页',
-        announcement: '最新公告',
-        library: '文献数据库',
-        settings: '系统设置',
-        exhibitXinhai: '辛亥革命风云',
-        exhibitWhampoa: '黄埔建军岁月',
-        exhibitMayfourth: '五四新文化运动',
-        exhibitBiography: '国父生平传记',
-        statusAttendance: '总参典：',
-        unitAttendance: '人次',
-        noResults: '无相符搜索结果',
-        visitorLabel: '访客识别码',
-        copiedHint: '已复制！'
-    }
-};
-
-/* ============================================================================
- * Desktop Split View Router Helpers & Core Architecture
- * ============================================================================ */
-
-/* Dynamically determine and cache the root base URL of the site */
-function computeSiteBaseUrl() {
-    const loc = window.location;
-    const path = loc.pathname;
-    const markerRegex = new RegExp('^(.*\\/)(?:pages|events|captcha|main|css|js)\\/', 'i');
-    const match = path.match(markerRegex);
-    if (match) {
-        return new URL(match[1], loc.origin).href;
-    }
-    const dir = path.substring(0, path.lastIndexOf('/') + 1);
-    return new URL(dir || '/', loc.origin).href;
-}
-
-const siteBaseUrl = computeSiteBaseUrl();
-
-function getSiteBaseUrl() {
-    return siteBaseUrl;
-}
-
-/* Resolve a site-root-relative path to an absolute URL */
-export function resolveSiteUrl(relPath) {
-    return new URL(relPath, getSiteBaseUrl()).href;
-}
-
-/* Map URL to canonical sidebar tab ID */
-export function getTabFromUrl(url) {
-    const path = new URL(url, window.location.href).pathname.toLowerCase();
-    if (path.includes('/biography/')) return 'biography';
-    if (path.includes('/events/xinhai/')) return 'xinhai';
-    if (path.includes('/events/whampoa/')) return 'whampoa';
-    if (path.includes('/events/mayfourth/')) return 'mayfourth';
-    if (path.includes('/events/militaries/')) return 'militaries';
-    if (path.includes('/events/yatsen/yatsen-birth.html')) return 'yatsen-birth';
-    if (path.includes('/events/yatsen/yatsen-passing.html')) return 'yatsen-passing';
-    if (path.includes('/pages/library/language.html')) return 'settings';
-    if (path.includes('/pages/library/')) return 'library';
-    if (path.includes('/pages/settings/')) return 'settings';
-    if (path.includes('/pages/about/') || path.includes('/pages/thanks/')) return 'settings';
-    if (path.includes('/pages/announcement/')) return 'announcement';
-    if (path.includes('index.html') || path.endsWith('/') || path.endsWith('/sys-memorial/')) return 'home';
-    return null;
-}
+export { resolveSiteUrl, getTabFromUrl };
 
 /* Ensure stylesheet isolation between home and subpages */
-export function ensurePageStylesheets(isHome) {
+export async function ensurePageStylesheets(isHome) {
     if (isMobileLayout()) return;
 
-    let homeLink = document.getElementById('sys-style-home');
-    if (!homeLink) {
-        homeLink = document.querySelector('link[href*="main/style.css"]');
-        if (homeLink) {
-            homeLink.id = 'sys-style-home';
-        } else {
-            homeLink = document.createElement('link');
-            homeLink.id = 'sys-style-home';
-            homeLink.rel = 'stylesheet';
-            document.head.appendChild(homeLink);
-        }
-    }
-    homeLink.href = resolveSiteUrl('main/style.css?v=20260907f');
-
-    let subpageLink = document.getElementById('sys-style-subpage');
-    if (!subpageLink) {
-        subpageLink = document.querySelector('link[href*="subpage.css"]');
-        if (subpageLink) {
-            subpageLink.id = 'sys-style-subpage';
-        } else {
-            subpageLink = document.createElement('link');
-            subpageLink.id = 'sys-style-subpage';
-            subpageLink.rel = 'stylesheet';
-            document.head.appendChild(subpageLink);
-        }
-    }
-    subpageLink.href = resolveSiteUrl('css/components/subpage.css?v=20260907f');
-
-    let varLink = document.getElementById('sys-style-variables');
+    const varHref = resolveSiteUrl('css/variables.css');
+    let varLink = document.getElementById('sys-style-variables') || document.querySelector('link[href*="variables.css"]');
     if (!varLink) {
-        varLink = document.querySelector('link[href*="variables.css"]');
-        if (varLink) {
-            varLink.id = 'sys-style-variables';
-        } else {
-            varLink = document.createElement('link');
-            varLink.id = 'sys-style-variables';
-            varLink.rel = 'stylesheet';
-            document.head.insertBefore(varLink, document.head.firstChild);
-        }
-    }
-    varLink.href = resolveSiteUrl('css/variables.css?v=20260907f');
-
-    let baseLink = document.getElementById('sys-style-base');
-    if (!baseLink) {
-        baseLink = document.querySelector('link[href*="base.css"]');
-        if (baseLink) {
-            baseLink.id = 'sys-style-base';
-        } else {
-            baseLink = document.createElement('link');
-            baseLink.id = 'sys-style-base';
-            baseLink.rel = 'stylesheet';
-            document.head.insertBefore(baseLink, document.head.firstChild);
-        }
-    }
-    baseLink.href = resolveSiteUrl('css/base.css?v=20260907f');
-
-    let indLink = document.getElementById('sys-style-activity');
-    if (!indLink) {
-        indLink = document.querySelector('link[href*="activity-indicator.css"]');
-        if (indLink) {
-            indLink.id = 'sys-style-activity';
-        } else {
-            indLink = document.createElement('link');
-            indLink.id = 'sys-style-activity';
-            indLink.rel = 'stylesheet';
-            document.head.appendChild(indLink);
-        }
-    }
-    indLink.href = resolveSiteUrl('css/components/activity-indicator.css?v=20260907f');
-
-    let shellLink = document.getElementById('sys-style-desktop-shell');
-    if (!shellLink) {
-        shellLink = document.querySelector('link[href*="desktop-shell.css"]');
-        if (shellLink) {
-            shellLink.id = 'sys-style-desktop-shell';
-        } else {
-            shellLink = document.createElement('link');
-            shellLink.id = 'sys-style-desktop-shell';
-            shellLink.rel = 'stylesheet';
-            document.head.appendChild(shellLink);
-        }
-    }
-    shellLink.href = resolveSiteUrl('css/components/desktop-shell.css?v=20260907f');
-
-    if (isHome) {
-        homeLink.disabled = false;
-        subpageLink.disabled = true;
+        varLink = document.createElement('link');
+        varLink.id = 'sys-style-variables';
+        varLink.rel = 'stylesheet';
+        varLink.href = varHref;
+        document.head.insertBefore(varLink, document.head.firstChild);
     } else {
-        homeLink.disabled = true;
-        subpageLink.disabled = false;
+        varLink.id = 'sys-style-variables';
+        if (varLink.href !== varHref) varLink.href = varHref;
+    }
+
+    const baseHref = resolveSiteUrl('css/base.css');
+    let baseLink = document.getElementById('sys-style-base') || document.querySelector('link[href*="base.css"]');
+    if (!baseLink) {
+        baseLink = document.createElement('link');
+        baseLink.id = 'sys-style-base';
+        baseLink.rel = 'stylesheet';
+        baseLink.href = baseHref;
+        varLink.parentNode.insertBefore(baseLink, varLink.nextSibling);
+    } else {
+        baseLink.id = 'sys-style-base';
+        if (baseLink.href !== baseHref) baseLink.href = baseHref;
+    }
+
+    const shellHref = resolveSiteUrl('css/components/desktop-shell.css');
+    let shellLink = document.getElementById('sys-style-desktop-shell') || document.querySelector('link[href*="desktop-shell.css"]');
+    if (!shellLink) {
+        shellLink = document.createElement('link');
+        shellLink.id = 'sys-style-desktop-shell';
+        shellLink.rel = 'stylesheet';
+        shellLink.href = shellHref;
+        document.head.appendChild(shellLink);
+    } else {
+        shellLink.id = 'sys-style-desktop-shell';
+        if (shellLink.href !== shellHref) shellLink.href = shellHref;
+    }
+
+    const indHref = resolveSiteUrl('css/components/activity-indicator.css');
+    let indLink = document.getElementById('sys-style-activity') || document.querySelector('link[href*="activity-indicator.css"]');
+    if (!indLink) {
+        indLink = document.createElement('link');
+        indLink.id = 'sys-style-activity';
+        indLink.rel = 'stylesheet';
+        indLink.href = indHref;
+        document.head.appendChild(indLink);
+    } else {
+        indLink.id = 'sys-style-activity';
+        if (indLink.href !== indHref) indLink.href = indHref;
+    }
+
+    const activeId = isHome ? 'sys-style-home' : 'sys-style-subpage';
+    const activeSubstr = isHome ? 'main/style.css' : 'subpage.css';
+    const activePath = isHome ? 'main/style.css' : 'css/components/subpage.css';
+    const inactiveId = isHome ? 'sys-style-subpage' : 'sys-style-home';
+    const inactiveSubstr = isHome ? 'subpage.css' : 'main/style.css';
+
+    const activeHref = resolveSiteUrl(activePath);
+    let activeLink = document.getElementById(activeId) || document.querySelector('link[href*="' + activeSubstr + '"]');
+
+    if (activeLink && !activeLink.disabled && !activeLink.hasAttribute('disabled')) {
+        activeLink.id = activeId;
+        if (activeLink.href !== activeHref) {
+            activeLink.href = activeHref;
+        }
+        /* Keep page stylesheet ordered strictly before desktop-shell.css */
+        if (!(activeLink.compareDocumentPosition(shellLink) & Node.DOCUMENT_POSITION_FOLLOWING)) {
+            shellLink.parentNode.insertBefore(activeLink, shellLink);
+        }
+    } else {
+        if (activeLink) {
+            activeLink.remove();
+        }
+        const newLink = document.createElement('link');
+        newLink.id = activeId;
+        newLink.rel = 'stylesheet';
+
+        const loadPromise = new Promise((resolve) => {
+            let settled = false;
+            const finish = () => {
+                if (settled) return;
+                settled = true;
+                clearTimeout(timer);
+                resolve();
+            };
+            const timer = setTimeout(finish, 2000);
+            newLink.addEventListener('load', finish, { once: true });
+            newLink.addEventListener('error', finish, { once: true });
+        });
+
+        newLink.href = activeHref;
+        shellLink.parentNode.insertBefore(newLink, shellLink);
+        await loadPromise;
+    }
+
+    /* Remove the inactive page stylesheet after the active one is ready */
+    const inactiveLink = document.getElementById(inactiveId) || document.querySelector('link[href*="' + inactiveSubstr + '"]');
+    if (inactiveLink) {
+        inactiveLink.disabled = true;
+        inactiveLink.remove();
     }
 }
 
@@ -424,19 +202,93 @@ async function executeStageScripts(doc, targetUrl) {
         }
     }
 
+    /* Dynamically load Chart.js when entering pages that render canvas charts (e.g. biography) */
+    const needsChartJs = doc.querySelector('#influenceChart, #sanminChart, canvas[data-chart]') ||
+                         doc.querySelector('script[src*="chart.min.js"]');
+    if (needsChartJs && typeof window.Chart === 'undefined') {
+        try {
+            if (!window.__chartJsLoadPromise) {
+                window.__chartJsLoadPromise = new Promise((resolve, reject) => {
+                    const chartScript = document.createElement('script');
+                    chartScript.src = resolveSiteUrl('js/chart.min.js');
+                    chartScript.async = false;
+                    chartScript.onload = () => resolve();
+                    chartScript.onerror = (err) => {
+                        window.__chartJsLoadPromise = null;
+                        reject(err);
+                    };
+                    document.head.appendChild(chartScript);
+                });
+            }
+            await window.__chartJsLoadPromise;
+        } catch (err) {
+            console.error('[Router Chart.js Load Error]:', err);
+        }
+    }
+
     const isHome = getTabFromUrl(targetUrl) === 'home';
     if (isHome) {
+        /* Mount background music element if desktop session started from a subpage */
+        if (!document.getElementById('bg-music')) {
+            const docBgMusic = doc.getElementById('bg-music');
+            if (docBgMusic) {
+                const bgMusicClone = docBgMusic.cloneNode(true);
+                bgMusicClone.querySelectorAll('source[src]').forEach(sourceEl => {
+                    const rawSrc = sourceEl.getAttribute('src');
+                    if (rawSrc) {
+                        sourceEl.setAttribute('src', new URL(rawSrc, targetUrl).href);
+                    }
+                });
+                document.body.appendChild(bgMusicClone);
+            }
+        }
+
+        /* Ensure runtime environment configuration is loaded before Home bootstrap */
+        if (typeof window.ENV === 'undefined') {
+            await new Promise((resolve) => {
+                const envScript = document.createElement('script');
+                envScript.src = resolveSiteUrl('api/env.js');
+                envScript.async = false;
+                envScript.onload = () => resolve();
+                envScript.onerror = () => resolve();
+                document.head.appendChild(envScript);
+            });
+        }
+
         if (typeof window.initApp === 'function') {
             try {
                 window.initApp();
             } catch (err) {
                 console.error('[Router Home Init Error]:', err);
             }
+        } else {
+            try {
+                const appMod = await import(resolveSiteUrl('js/app.js'));
+                if (!window.__appInitialized && typeof appMod.initApp === 'function') {
+                    appMod.initApp();
+                }
+            } catch (err) {
+                console.error('[Router Home Module Load Error]:', err);
+            }
         }
         return;
     }
 
-    /* Execute inline module scripts extracted from target document */
+    /* Boot declarative subpage controllers via unified boot dispatcher when available */
+    const pageName = doc.body ? doc.body.getAttribute('data-page') : null;
+    if (pageName) {
+        try {
+            const bootMod = await import(resolveSiteUrl('js/boot.js'));
+            if (typeof bootMod.bootPage === 'function') {
+                await bootMod.bootPage(pageName);
+            }
+            return;
+        } catch (err) {
+            console.error('[Router Page Boot Error]:', err);
+        }
+    }
+
+    /* Fallback: execute inline module scripts extracted from target document */
     const inlineModules = doc.querySelectorAll('body script[type="module"]:not([src])');
     inlineModules.forEach(oldScript => {
         const newScript = document.createElement('script');
@@ -452,7 +304,8 @@ async function executeStageScripts(doc, targetUrl) {
 }
 
 /* Desktop Split Stage Navigator */
-let isNavigatingStage = false;
+let activeNavToken = 0;
+let activeFetchCtrl = null;
 
 export async function navigateDesktopStage(targetHref, pushState = true, fromSidebar = false) {
     if (isMobileLayout()) {
@@ -467,9 +320,12 @@ export async function navigateDesktopStage(targetHref, pushState = true, fromSid
         return;
     }
 
-    if (isNavigatingStage) return;
-    isNavigatingStage = true;
-    const safetyTimer = setTimeout(() => { isNavigatingStage = false; }, 4000);
+    /* Supersede any in-flight navigation rather than dropping rapid user clicks */
+    if (activeFetchCtrl) {
+        activeFetchCtrl.abort();
+        activeFetchCtrl = null;
+    }
+    const navToken = ++activeNavToken;
 
     const targetTab = getTabFromUrl(targetUrl.href);
 
@@ -484,9 +340,11 @@ export async function navigateDesktopStage(targetHref, pushState = true, fromSid
     const stage = ensureStageContainer();
     stage.classList.add('stage-fading');
 
+    const fetchCtrl = new AbortController();
+    activeFetchCtrl = fetchCtrl;
+    const timeoutId = setTimeout(() => fetchCtrl.abort(), 8000);
+
     try {
-        const fetchCtrl = new AbortController();
-        const timeoutId = setTimeout(() => fetchCtrl.abort(), 8000);
         let fetchCompleted = false;
 
         const resPromise = fetch(targetUrl.href, { signal: fetchCtrl.signal })
@@ -500,6 +358,7 @@ export async function navigateDesktopStage(targetHref, pushState = true, fromSid
 
         /* Wait 120ms for stage fade out animation to finish */
         await new Promise(resolve => setTimeout(resolve, 120));
+        if (navToken !== activeNavToken) return;
 
         /* If content has not arrived yet, reveal centered native Apple activity indicator */
         let indicatorEl = null;
@@ -510,20 +369,51 @@ export async function navigateDesktopStage(targetHref, pushState = true, fromSid
         }
 
         const html = await resPromise;
+        if (navToken !== activeNavToken) return;
+
         const doc = new DOMParser().parseFromString(html, 'text/html');
 
-        /* 3. Synchronize browser history and document title */
+        /* 3. Synchronize browser history, document head title i18n attributes, and document title */
         if (pushState) {
             window.history.pushState({ url: targetUrl.href }, doc.title, targetUrl.href);
+        }
+        const docTitleEl = doc.head ? doc.head.querySelector('title') : null;
+        let headTitleEl = document.head.querySelector('title');
+        if (!headTitleEl) {
+            headTitleEl = document.createElement('title');
+            document.head.appendChild(headTitleEl);
+        }
+        if (docTitleEl && docTitleEl.id) {
+            headTitleEl.id = docTitleEl.id;
+        }
+        if (docTitleEl && docTitleEl.hasAttribute('data-i18n')) {
+            headTitleEl.setAttribute('data-i18n', docTitleEl.getAttribute('data-i18n'));
+        } else {
+            headTitleEl.removeAttribute('data-i18n');
+        }
+        if (docTitleEl && docTitleEl.hasAttribute('data-page-title-key')) {
+            headTitleEl.setAttribute('data-page-title-key', docTitleEl.getAttribute('data-page-title-key'));
+        } else {
+            headTitleEl.removeAttribute('data-page-title-key');
         }
         document.title = doc.title;
 
         /* 4. Switch stylesheets between home and subpages WHILE STAGE IS FULLY INVISIBLE */
         const isHome = targetTab === 'home';
-        ensurePageStylesheets(isHome);
+        await ensurePageStylesheets(isHome);
+        if (navToken !== activeNavToken) return;
 
-        /* 5. Synchronize document.body classes */
+        /* 5. Synchronize document.body classes and page metadata attributes */
         document.body.className = doc.body.className;
+        const pageAttrs = ['data-page', 'data-event'];
+        pageAttrs.forEach((attr) => {
+            const val = doc.body.getAttribute(attr);
+            if (val !== null) {
+                document.body.setAttribute(attr, val);
+            } else {
+                document.body.removeAttribute(attr);
+            }
+        });
         document.body.classList.add('has-desktop-sidebar', 'has-desktop-indicator');
         if (isHome) {
             document.body.classList.add('is-desktop-home');
@@ -549,14 +439,22 @@ export async function navigateDesktopStage(targetHref, pushState = true, fromSid
         if (indicatorEl) {
             hideActivityIndicator(stage);
             await new Promise(resolve => setTimeout(resolve, 100));
+            if (navToken !== activeNavToken) return;
         }
+
+        /* Tear down outgoing page listeners and cleanup hooks before mounting incoming DOM */
+        resetPageLifecycle();
 
         stage.classList.add('stage-fading');
         stage.innerHTML = newContent;
         window.scrollTo(0, 0);
 
+        /* Apply declarative translations before executing page-specific overrides */
+        applyTranslations(document);
+
         /* 7. Execute scripts associated with the new page */
         await executeStageScripts(doc, targetUrl.href);
+        if (navToken !== activeNavToken) return;
 
         /* Guarantee mobile top navigation bar is strictly hidden on desktop */
         const topNav = document.querySelector('.apple-top-nav');
@@ -566,6 +464,7 @@ export async function navigateDesktopStage(targetHref, pushState = true, fromSid
 
         /* 8. Allow browser engine to calculate layout and apply styles before revealing */
         await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+        if (navToken !== activeNavToken) return;
 
         /* 9. Fade fully-styled stage back in */
         stage.classList.remove('stage-fading');
@@ -577,11 +476,16 @@ export async function navigateDesktopStage(targetHref, pushState = true, fromSid
             window.__syncIndicatorPosition();
         }
     } catch (err) {
+        if (navToken !== activeNavToken || (err && err.name === 'AbortError')) {
+            return;
+        }
         console.error('[Stage Navigation Fallback]:', err);
         window.location.href = targetUrl.href;
     } finally {
-        clearTimeout(safetyTimer);
-        isNavigatingStage = false;
+        clearTimeout(timeoutId);
+        if (activeFetchCtrl === fetchCtrl) {
+            activeFetchCtrl = null;
+        }
     }
 }
 
@@ -661,35 +565,8 @@ export function initDesktopShell(options = {}) {
         basePath = './'
     } = options;
 
-    /* Smart automatic tab detection based on current URL */
-    const path = window.location.pathname.toLowerCase();
-    if (path.includes('/biography/')) {
-        activeTab = 'biography';
-    } else if (path.includes('/events/xinhai/')) {
-        activeTab = 'xinhai';
-    } else if (path.includes('/events/whampoa/')) {
-        activeTab = 'whampoa';
-    } else if (path.includes('/events/mayfourth/')) {
-        activeTab = 'mayfourth';
-    } else if (path.includes('/events/militaries/')) {
-        activeTab = 'militaries';
-    } else if (path.includes('/events/yatsen/yatsen-birth.html')) {
-        activeTab = 'yatsen-birth';
-    } else if (path.includes('/events/yatsen/yatsen-passing.html')) {
-        activeTab = 'yatsen-passing';
-    } else if (path.includes('/pages/library/language.html')) {
-        activeTab = 'settings';
-    } else if (path.includes('/pages/library/')) {
-        activeTab = 'library';
-    } else if (path.includes('/pages/settings/')) {
-        activeTab = 'settings';
-    } else if (path.includes('/pages/about/') || path.includes('/pages/thanks/')) {
-        activeTab = 'settings';
-    } else if (path.includes('/pages/announcement/')) {
-        activeTab = 'announcement';
-    } else if (path.includes('index.html') || path.endsWith('/') || path.endsWith('/sys-memorial/')) {
-        activeTab = 'home';
-    }
+    /* Canonical tab detection via shared route registry */
+    activeTab = getTabFromUrl(window.location.href) || activeTab;
 
     /* Add layout helper class to body for wide desktop viewports */
     document.body.classList.add('has-desktop-sidebar');
@@ -702,24 +579,28 @@ export function initDesktopShell(options = {}) {
     }
 
     /* Determine navigation source for initial page load if not already set by router.
-     * Exhibit pages (biography, xinhai, whampoa, mayfourth, militaries, yatsen-*) are
-     * accessible both from the sidebar and from the library page. On a hard load we
-     * inspect document.referrer to decide whether to show the top-back-btn. */
+     * Second-level detail subpages always display top-back-btn; top-level exhibits inspect
+     * document.referrer on hard load to decide whether to show top-back-btn. */
     if (!document.body.classList.contains('nav-from-sidebar') && !document.body.classList.contains('nav-from-content')) {
-        const exhibitTabs = new Set(['biography', 'xinhai', 'whampoa', 'mayfourth', 'militaries', 'yatsen-birth', 'yatsen-passing']);
-        if (exhibitTabs.has(activeTab)) {
-            const ref = document.referrer;
-            const cameFromLibrary = ref && (ref.includes('/pages/library/') || ref.includes('library.html'));
-            if (cameFromLibrary) {
-                document.body.classList.remove('nav-from-sidebar');
-                document.body.classList.add('nav-from-content');
-            } else {
-                document.body.classList.add('nav-from-sidebar');
-                document.body.classList.remove('nav-from-content');
-            }
-        } else {
+        if (isDetailSubpage(window.location.href)) {
             document.body.classList.remove('nav-from-sidebar');
             document.body.classList.add('nav-from-content');
+        } else {
+            const exhibitTabs = new Set(['biography', 'xinhai', 'whampoa', 'mayfourth', 'militaries', 'yatsen-birth', 'yatsen-passing']);
+            if (exhibitTabs.has(activeTab)) {
+                const ref = document.referrer;
+                const cameFromLibrary = ref && (ref.includes('/pages/library/') || ref.includes('library.html'));
+                if (cameFromLibrary) {
+                    document.body.classList.remove('nav-from-sidebar');
+                    document.body.classList.add('nav-from-content');
+                } else {
+                    document.body.classList.add('nav-from-sidebar');
+                    document.body.classList.remove('nav-from-content');
+                }
+            } else {
+                document.body.classList.remove('nav-from-sidebar');
+                document.body.classList.add('nav-from-content');
+            }
         }
     }
 
@@ -815,9 +696,6 @@ export function initDesktopShell(options = {}) {
  * DOM Factory: Create Sidebar Node
  * ============================================================================ */
 function createSidebarElement(activeTab, basePath) {
-    const currentLang = getCurrentLang();
-    const str = SIDEBAR_STRINGS[currentLang] || SIDEBAR_STRINGS.tc;
-
     const routes = {
         home: resolveSiteUrl('index.html'),
         announcement: resolveSiteUrl('pages/announcement/announcement.html'),
@@ -833,14 +711,15 @@ function createSidebarElement(activeTab, basePath) {
     aside.id = 'desktop-sidebar';
     aside.className = 'desktop-sidebar';
     aside.setAttribute('role', 'navigation');
-    aside.setAttribute('aria-label', '桌面端導航側欄');
+    aside.setAttribute('data-i18n-aria-label', 'sidebar.aria_nav');
+    aside.setAttribute('aria-label', t('sidebar.aria_nav'));
 
     aside.innerHTML = `
         <div class="desktop-sidebar-top">
             <!-- Brand Header -->
             <a href="${routes.home}" class="desktop-sidebar-brand">
                 <div class="desktop-sidebar-brand-icon">🏛️</div>
-                <div class="desktop-sidebar-brand-text" id="desktop-brand-text">${str.brand}</div>
+                <div class="desktop-sidebar-brand-text" id="desktop-brand-text" data-i18n="sidebar.brand">${t('sidebar.brand')}</div>
             </a>
 
             <!-- Apple Music Search Box -->
@@ -850,57 +729,57 @@ function createSidebarElement(activeTab, basePath) {
                         <circle cx="11" cy="11" r="8"></circle>
                         <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                     </svg>
-                    <input type="text" class="desktop-search-input" id="desktop-search-input" placeholder="${str.searchPlaceholder}" autocomplete="off">
+                    <input type="text" class="desktop-search-input" id="desktop-search-input" data-i18n-placeholder="sidebar.search_placeholder" placeholder="${t('sidebar.search_placeholder')}" autocomplete="off">
                 </div>
                 <div class="desktop-search-dropdown" id="desktop-search-dropdown"></div>
             </div>
 
             <!-- Primary Navigation Section (The 4 Core Tabs) -->
             <div class="desktop-nav-section">
-                <div class="desktop-nav-header" id="desktop-menu-header">${str.menuHeader}</div>
+                <div class="desktop-nav-header" id="desktop-menu-header" data-i18n="sidebar.menu_header">${t('sidebar.menu_header')}</div>
                 <a href="${routes.home}" class="desktop-nav-item ${activeTab === 'home' ? 'active' : ''}" data-sidebar-tab="home">
                     ${TAB_ICONS.home}
-                    <span class="desktop-nav-label" id="label-nav-home">${str.home}</span>
+                    <span class="desktop-nav-label" id="label-nav-home" data-i18n="sidebar.home">${t('sidebar.home')}</span>
                 </a>
                 <a href="${routes.announcement}" class="desktop-nav-item ${activeTab === 'announcement' ? 'active' : ''}" data-sidebar-tab="announcement">
                     ${TAB_ICONS.announcement}
-                    <span class="desktop-nav-label" id="label-nav-announcement">${str.announcement}</span>
+                    <span class="desktop-nav-label" id="label-nav-announcement" data-i18n="sidebar.announcement">${t('sidebar.announcement')}</span>
                 </a>
                 <a href="${routes.library}" class="desktop-nav-item ${activeTab === 'library' ? 'active' : ''}" data-sidebar-tab="library">
                     ${TAB_ICONS.library}
-                    <span class="desktop-nav-label" id="label-nav-library">${str.library}</span>
+                    <span class="desktop-nav-label" id="label-nav-library" data-i18n="sidebar.library">${t('sidebar.library')}</span>
                 </a>
                 <a href="${routes.settings}" class="desktop-nav-item ${activeTab === 'settings' ? 'active' : ''}" data-sidebar-tab="settings">
                     ${TAB_ICONS.settings}
-                    <span class="desktop-nav-label" id="label-nav-settings">${str.settings}</span>
+                    <span class="desktop-nav-label" id="label-nav-settings" data-i18n="sidebar.settings">${t('sidebar.settings')}</span>
                 </a>
             </div>
 
             <!-- Subgroup: Historical Exhibitions -->
             <div class="desktop-nav-section">
-                <div class="desktop-nav-header" id="desktop-exhibits-header">${str.exhibitsHeader}</div>
+                <div class="desktop-nav-header" id="desktop-exhibits-header" data-i18n="sidebar.exhibits_header">${t('sidebar.exhibits_header')}</div>
                 <a href="${routes.biography}" class="desktop-nav-item ${activeTab === 'biography' ? 'active' : ''}" data-sidebar-tab="biography">
                     <svg viewBox="0 0 24 24"><path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 4h5v8l-2.5-1.5L6 12V4z"/></svg>
-                    <span class="desktop-nav-label" id="label-exhibit-biography">${str.exhibitBiography}</span>
+                    <span class="desktop-nav-label" id="label-exhibit-biography" data-i18n="sidebar.exhibit_biography">${t('sidebar.exhibit_biography')}</span>
                 </a>
                 <a href="${routes.xinhai}" class="desktop-nav-item ${activeTab === 'xinhai' ? 'active' : ''}" data-sidebar-tab="xinhai">
                     <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-                    <span class="desktop-nav-label" id="label-exhibit-xinhai">${str.exhibitXinhai}</span>
+                    <span class="desktop-nav-label" id="label-exhibit-xinhai" data-i18n="sidebar.exhibit_xinhai">${t('sidebar.exhibit_xinhai')}</span>
                 </a>
                 <a href="${routes.whampoa}" class="desktop-nav-item ${activeTab === 'whampoa' ? 'active' : ''}" data-sidebar-tab="whampoa">
                     <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
-                    <span class="desktop-nav-label" id="label-exhibit-whampoa">${str.exhibitWhampoa}</span>
+                    <span class="desktop-nav-label" id="label-exhibit-whampoa" data-i18n="sidebar.exhibit_whampoa">${t('sidebar.exhibit_whampoa')}</span>
                 </a>
                 <a href="${routes.mayfourth}" class="desktop-nav-item ${activeTab === 'mayfourth' ? 'active' : ''}" data-sidebar-tab="mayfourth">
                     <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
-                    <span class="desktop-nav-label" id="label-exhibit-mayfourth">${str.exhibitMayfourth}</span>
+                    <span class="desktop-nav-label" id="label-exhibit-mayfourth" data-i18n="sidebar.exhibit_mayfourth">${t('sidebar.exhibit_mayfourth')}</span>
                 </a>
             </div>
         </div>
 
         <!-- Sidebar Footer Visitor Profile (Apple Music Profile Style with Identicon) -->
         <div class="desktop-sidebar-bottom" style="border-top: 0.5px solid rgba(255, 255, 255, 0.08); padding-top: 10px; margin: 8px -12px 0 -12px; padding-left: 12px; padding-right: 12px; overflow: hidden !important; min-width: 0 !important; flex-shrink: 0;">
-            <div class="desktop-profile-card" id="desktop-profile-card" tabindex="0" role="button" aria-label="${str.visitorLabel}" style="display: flex !important; align-items: center !important; gap: 8px !important; height: 24px !important; padding: 0 6px !important; min-width: 0 !important; overflow: hidden !important; width: 100% !important; box-sizing: border-box !important;">
+            <div class="desktop-profile-card" id="desktop-profile-card" tabindex="0" role="button" data-i18n-aria-label="sidebar.visitor_label" aria-label="${t('sidebar.visitor_label')}" style="display: flex !important; align-items: center !important; gap: 8px !important; height: 24px !important; padding: 0 6px !important; min-width: 0 !important; overflow: hidden !important; width: 100% !important; box-sizing: border-box !important;">
                 <div class="desktop-profile-avatar" id="desktop-profile-avatar" style="width: 16px !important; height: 16px !important; border-radius: 50% !important; overflow: hidden !important; flex-shrink: 0 !important;"></div>
                 <span class="desktop-profile-uuid" id="desktop-profile-uuid" style="font-size: 11px !important; font-weight: 500 !important; font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Monaco, Consolas, monospace !important; letter-spacing: -0.2px !important; line-height: 1 !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; min-width: 0 !important; flex: 1 !important; display: block !important;"></span>
             </div>
@@ -926,25 +805,22 @@ function setupDesktopSearch(sidebarEl, basePath) {
             return;
         }
 
-        const currentLang = getCurrentLang();
-        const str = SIDEBAR_STRINGS[currentLang] || SIDEBAR_STRINGS.tc;
-
         const matched = SEARCH_INDEX.filter(item => {
-            const title = (currentLang === 'sc' ? item.titleSc : item.titleTc).toLowerCase();
-            const cat = (currentLang === 'sc' ? item.categorySc : item.categoryTc).toLowerCase();
+            const title = t(item.titleKey).toLowerCase();
+            const cat = t(item.categoryKey).toLowerCase();
             const kw = item.keywords.join(' ').toLowerCase();
             return title.includes(q) || cat.includes(q) || kw.includes(q);
         });
 
         if (matched.length === 0) {
-            searchDropdown.innerHTML = `<div class="desktop-search-empty">${str.noResults}</div>`;
+            searchDropdown.innerHTML = `<div class="desktop-search-empty">${t('sidebar.no_results')}</div>`;
             searchDropdown.classList.add('active');
             return;
         }
 
         searchDropdown.innerHTML = matched.slice(0, 8).map(item => {
-            const title = currentLang === 'sc' ? item.titleSc : item.titleTc;
-            const category = currentLang === 'sc' ? item.categorySc : item.categoryTc;
+            const title = t(item.titleKey);
+            const category = t(item.categoryKey);
             const targetUrl = resolveSiteUrl(item.url);
 
             return `
@@ -987,48 +863,7 @@ function setupDesktopSearch(sidebarEl, basePath) {
  * ============================================================================ */
 function syncSidebarLabels(sidebarEl) {
     if (!sidebarEl) return;
-    const currentLang = getCurrentLang();
-    const str = SIDEBAR_STRINGS[currentLang] || SIDEBAR_STRINGS.tc;
-
-    const brandEl = sidebarEl.querySelector('#desktop-brand-text');
-    if (brandEl) brandEl.textContent = str.brand;
-
-    const brandTitle = sidebarEl.querySelector('#desktop-brand-title');
-    if (brandTitle) brandTitle.textContent = str.brand;
-
-    const searchInput = sidebarEl.querySelector('#desktop-search-input');
-    if (searchInput) searchInput.placeholder = str.searchPlaceholder;
-
-    const menuHeader = sidebarEl.querySelector('#desktop-menu-header');
-    if (menuHeader) menuHeader.textContent = str.menuHeader;
-
-    const exhibitsHeader = sidebarEl.querySelector('#desktop-exhibits-header');
-    if (exhibitsHeader) exhibitsHeader.textContent = str.exhibitsHeader;
-
-    const navHome = sidebarEl.querySelector('#label-nav-home');
-    if (navHome) navHome.textContent = str.home;
-
-    const navAnn = sidebarEl.querySelector('#label-nav-announcement');
-    if (navAnn) navAnn.textContent = str.announcement;
-
-    const navLib = sidebarEl.querySelector('#label-nav-library');
-    if (navLib) navLib.textContent = str.library;
-
-    const navSet = sidebarEl.querySelector('#label-nav-settings');
-    if (navSet) navSet.textContent = str.settings;
-
-    const exBio = sidebarEl.querySelector('#label-exhibit-biography');
-    if (exBio) exBio.textContent = str.exhibitBiography;
-
-    const exXin = sidebarEl.querySelector('#label-exhibit-xinhai');
-    if (exXin) exXin.textContent = str.exhibitXinhai;
-
-    const exWha = sidebarEl.querySelector('#label-exhibit-whampoa');
-    if (exWha) exWha.textContent = str.exhibitWhampoa;
-
-    const exMay = sidebarEl.querySelector('#label-exhibit-mayfourth');
-    if (exMay) exMay.textContent = str.exhibitMayfourth;
-
+    applyTranslations(sidebarEl);
 }
 
 /* ============================================================================
@@ -1065,9 +900,6 @@ function syncSidebarProfile(sidebarEl) {
         card.addEventListener('click', async (e) => {
             e.stopPropagation();
 
-            const currentLang = getCurrentLang();
-            const str = SIDEBAR_STRINGS[currentLang] || SIDEBAR_STRINGS.tc;
-
             let copied = false;
             try {
                 if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -1097,7 +929,7 @@ function syncSidebarProfile(sidebarEl) {
 
             if (uuidEl) {
                 if (resetTimer) clearTimeout(resetTimer);
-                uuidEl.textContent = '✓ ' + (str.copiedHint || '已複製！');
+                uuidEl.textContent = '✓ ' + t('sidebar.copied_hint');
                 uuidEl.classList.add('copied');
                 resetTimer = setTimeout(() => {
                     uuidEl.textContent = uuid;

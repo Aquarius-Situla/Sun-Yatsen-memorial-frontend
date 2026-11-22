@@ -48,21 +48,21 @@ body {
 }
 
 .apple-top-nav .nav-title {
-    font-size: 17px;
+    font-size: 16px;
     font-weight: 600;
     letter-spacing: -0.3px;
     color: #ffffff;
     font-family: -apple-system, BlinkMacSystemFont, "PingFang TC", "PingFang SC", "Microsoft JhengHei", sans-serif;
     margin: 0;
-    padding: 0 76px;
+    padding: 0 116px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
     height: 44px;
     line-height: 44px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: block;
     text-align: center;
     pointer-events: none;
-    max-width: calc(100% - 152px);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -75,14 +75,16 @@ body {
     top: env(safe-area-inset-top, 0px);
     bottom: 0;
     height: 44px;
-    padding-left: calc(12px + env(safe-area-inset-left, 0px));
-    padding-right: 18px;
+    padding-left: calc(8px + env(safe-area-inset-left, 0px));
+    padding-right: 4px;
+    max-width: 112px;
+    box-sizing: border-box;
     display: flex !important;
     align-items: center;
-    gap: 3px;
+    gap: 2px;
     color: #0a84ff !important;
     text-decoration: none;
-    font-size: 17px;
+    font-size: 14px;
     font-weight: 400;
     font-family: -apple-system, BlinkMacSystemFont, "PingFang TC", "PingFang SC", sans-serif;
     -webkit-tap-highlight-color: transparent;
@@ -95,8 +97,9 @@ body {
 }
 
 .apple-top-nav .nav-back-link svg {
-    width: 20px;
-    height: 20px;
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
     stroke: #0a84ff !important;
     stroke-width: 2.5;
     fill: none;
@@ -114,6 +117,9 @@ body {
  * ============================================================================ */
 .apple-top-nav .nav-back-link #nav-back-text {
     display: inline-block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
     transition: transform 0.24s cubic-bezier(0.32, 0.72, 0, 1), opacity 0.24s ease, color 0.2s ease;
 }
 

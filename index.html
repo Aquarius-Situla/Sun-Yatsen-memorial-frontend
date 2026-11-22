@@ -12,7 +12,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>私立中山紀念堂</title>
+    <title id="page-title" data-i18n="home.page_title">私立中山紀念堂</title>
 
     <script>
         /* Immediate device fingerprinting to eliminate layout flash */
@@ -48,14 +48,14 @@
     <!-- Critical inline CSS: eliminates white flash during iOS PWA page transitions -->
     <style>html,body{background-color:#111111;height:100%;min-height:100%;}@media(prefers-color-scheme:light){html,body{background-color:#f5f0e8;}}</style>
 
-    <link id="sys-style-variables" rel="stylesheet" href="css/variables.css?v=20260907f">
-    <link id="sys-style-base" rel="stylesheet" href="css/base.css?v=20260907f">
-    <link id="sys-style-home" rel="stylesheet" href="main/style.css?v=20260907f">
-    <link id="sys-style-subpage" rel="stylesheet" href="css/components/subpage.css?v=20260907f" disabled>
-    <link rel="stylesheet" href="css/components/tab-bar.css?v=20260907f">
-    <link rel="stylesheet" href="css/components/desktop-shell.css?v=20260907f">
-    <link rel="stylesheet" href="css/components/orientation-guard.css?v=20260907f">
-    <link rel="stylesheet" href="css/components/activity-indicator.css?v=20260907f">
+    <link id="sys-style-variables" rel="stylesheet" href="css/variables.css">
+    <link id="sys-style-base" rel="stylesheet" href="css/base.css">
+    <link id="sys-style-home" rel="stylesheet" href="main/style.css">
+    <link id="sys-style-subpage" rel="stylesheet" href="css/components/subpage.css" disabled>
+    <link rel="stylesheet" href="css/components/tab-bar.css">
+    <link id="sys-style-desktop-shell" rel="stylesheet" href="css/components/desktop-shell.css">
+    <link rel="stylesheet" href="css/components/orientation-guard.css">
+    <link id="sys-style-activity" rel="stylesheet" href="css/components/activity-indicator.css">
 
     <!-- System Dark/Light theme-color -->
     <meta name="color-scheme" content="light dark">
@@ -102,27 +102,27 @@
 </head>
 <body class="has-desktop-sidebar is-desktop-home">
     <div id="danmaku-container" class="hidden"></div>
-    <div id="memorial-banner" class="memorial-banner hidden">
+    <div id="memorial-banner" class="memorial-banner hidden" data-i18n="home.bow_prompt">
         請向國父遺像行三鞠躬禮
     </div>
 
-    <div id="sit-down-banner" class="status-banner">
+    <div id="sit-down-banner" class="status-banner" data-i18n="home.sit_down_prompt">
         請坐下
     </div>
 
     <div class="top-hover-trigger">
         <div class="dropdown-nav-bar">
             <div class="nav-left">
-                <a href="https://www.yatsen.gov.tw/" target="_blank" class="nav-link">🏛️ 國父紀念館</a>
+                <a href="https://www.yatsen.gov.tw/" target="_blank" class="nav-link" data-i18n="home.official_link">🏛️ 國父紀念館</a>
             </div>
             
             <div id="nav-festival-banner" class="nav-festival-banner"></div>
 
             <div class="nav-right">
-                <span id="minguo-date-display">⏳ 正在讀取曆法...</span>
+                <span id="minguo-date-display" data-i18n="home.calendar_loading">⏳ 正在讀取曆法...</span>
             </div>
         </div>
-        <div class="mobile-arrow-hint" id="mobile-arrow-btn" onclick="window.handleMobileArrowClick && window.handleMobileArrowClick(event)" role="button" tabindex="0" aria-label="展開導航欄">
+        <div class="mobile-arrow-hint" id="mobile-arrow-btn" role="button" tabindex="0" data-i18n-aria-label="home.expand_nav_aria" aria-label="展開導航欄">
             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M6 9L12 15L18 9" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
@@ -130,18 +130,18 @@
     </div>
 
     <div class="container">
-        <div class="frame-container" id="portrait-btn" role="button" tabindex="0" onclick="window.handlePortraitClick && window.handlePortraitClick()" aria-label="點擊行禮奏樂">
+        <div class="frame-container" id="portrait-btn" role="button" tabindex="0" data-i18n-aria-label="home.portrait_aria" aria-label="點擊行禮奏樂">
             <div class="wood-frame">
-                <img src="main/portrait.jpg" alt="國父遺像" class="portrait-img">
+                <img src="main/portrait.jpg" data-i18n-alt="home.portrait_alt" alt="國父遺像" class="portrait-img">
             </div>
         </div>
 
         <div class="attendance-box">
-            <span class="attendance-label">總參典人次：</span>
-            <span class="attendance-count" id="attendanceCount">0</span><span class="attendance-unit">人次</span>
+            <span class="attendance-label" data-i18n="home.attendance_label">總參典人次：</span>
+            <span class="attendance-count" id="attendanceCount">0</span><span class="attendance-unit" data-i18n="home.attendance_unit">人次</span>
         </div>
 
-        <div class="testament-box">
+        <div class="testament-box" data-i18n-aria-label="home.testament_aria">
             <div class="testament-text" id="testament-content">
              余致力國民革命，凡四十年，其目的在求中國之自由平等。積四十年之經驗，深知欲達到此目的，必須喚起民眾及聯合世界上以平等待我之民族，共同奮鬥。現在革命尚未成功，凡我同志，務須依照余所著建國方略、建國大綱、三民主義及第一次全國代表大會宣言，繼續努力，以求貫徹。最近主張開國民會議及廢除不平等條約，尤須於最短期間，促其實現。是所至囑！
             </div>
@@ -181,7 +181,7 @@
     <div id="message-modal" class="modal-overlay">
         <div class="modal-sheet">
             <div class="sheet-header">
-                <h2 class="sheet-title">留言</h2>
+                <h2 class="sheet-title" data-i18n="message.title">留言</h2>
                 <button id="history-message-btn" class="sheet-close-btn">
                     <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
                         <line x1="8" y1="6" x2="21" y2="6"></line>
@@ -193,9 +193,9 @@
                     </svg>
                 </button>
                 <div id="history-popover" class="history-popover">
-                    <h4>我的歷史留言</h4>
+                    <h4 data-i18n="message.history_title">我的歷史留言</h4>
                     <div id="history-list">
-                        <div class="empty-history">暫無留言紀錄</div>
+                        <div class="empty-history" data-i18n="message.empty_history">暫無留言紀錄</div>
                     </div>
                 </div>
             </div>
@@ -206,8 +206,8 @@
             </div>
             
             <div class="sheet-footer">
-                <button id="desktop-cancel-btn" class="macos-cancel-btn">取消</button>
-                <button id="submit-message-btn" class="ios-submit-btn">發送</button>
+                <button id="desktop-cancel-btn" class="macos-cancel-btn" data-i18n="common.cancel">取消</button>
+                <button id="submit-message-btn" class="ios-submit-btn" data-i18n="common.send">發送</button>
             </div>
         </div>
     </div>
@@ -223,6 +223,6 @@
         <source src="main/sanmin/sanmin.flac" type="audio/flac">
     </audio>
     <script src="api/env.js"></script>
-    <script type="module" src="js/app.js?v=20260907f"></script>
+    <script type="module" src="js/app.js"></script>
 </body>
 </html>

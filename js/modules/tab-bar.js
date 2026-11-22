@@ -7,10 +7,12 @@
  * 3. All prose is written in English.
  * ============================================================================ */
 
-import { getCurrentLang, TAB_DEFINITIONS, syncTabBarLabels } from './i18n.js?v=20260907f';
-import { showActivityIndicator, hideActivityIndicator } from './activity-indicator.js?v=20260907f';
-import { resolveSiteUrl, getTabFromUrl } from './desktop-shell.js?v=20260907f';
-import { isMobileLayout, isDesktopLayout } from './device-detect.js?v=20260907f';
+import { t, syncTabBarLabels } from './i18n.js';
+import { showActivityIndicator, hideActivityIndicator } from './activity-indicator.js';
+import { resolveSiteUrl, getTabFromUrl, isSubpageRoute, CANONICAL_TAB_ROUTES } from '../core/routes.js';
+import { isMobileLayout, isDesktopLayout } from './device-detect.js';
+
+export { isSubpageRoute };
 
 /* ============================================================================
  * Authentic Apple SF Symbols Vector Icons (24x24 Pixel-Perfect Fill Glyphs)
@@ -58,6 +60,15 @@ export function initTabBar(options = {}) {
 
     let tabBarEl = document.getElementById('apple-tab-bar');
 
+    /* Subpages never inject a bottom tab bar; hide any legacy element on mobile */
+    if (isSubpageRoute()) {
+        document.body.classList.add('is-subpage');
+        if (tabBarEl && isMobileLayout()) {
+            tabBarEl.style.setProperty('display', 'none', 'important');
+        }
+        return null;
+    }
+
     /* Build Tab URL routing dictionary */
     const routes = {
         home:         basePath === './' ? 'index.html' : `${basePath}index.html`,
@@ -72,20 +83,20 @@ export function initTabBar(options = {}) {
         tabBarEl.id = 'apple-tab-bar';
         tabBarEl.className = 'apple-tab-bar';
         tabBarEl.setAttribute('role', 'navigation');
-        tabBarEl.setAttribute('aria-label', '底部主選單');
+        tabBarEl.setAttribute('aria-label', t('tab.aria_nav'));
 
-        const currentLang = getCurrentLang();
-        const tabs = TAB_DEFINITIONS[currentLang] || TAB_DEFINITIONS.tc;
+        const tabIds = ['home', 'announcement', 'library', 'settings'];
 
-        tabBarEl.innerHTML = tabs.map(tab => {
-            const isActive = tab.id === activeTab;
-            const iconSvg = TAB_ICONS[tab.id] || '';
-            const href = routes[tab.id] || '#';
+        tabBarEl.innerHTML = tabIds.map((tabId) => {
+            const isActive = tabId === activeTab;
+            const iconSvg = TAB_ICONS[tabId] || '';
+            const href = routes[tabId] || '#';
+            const label = t(`tab.${tabId}`);
 
             return `
-                <a href="${href}" class="tab-item ${isActive ? 'active' : ''}" data-tab-id="${tab.id}" aria-label="${tab.label}">
+                <a href="${href}" class="tab-item ${isActive ? 'active' : ''}" data-tab-id="${tabId}" aria-label="${label}">
                     <div class="tab-icon">${iconSvg}</div>
-                    <div class="tab-label">${tab.label}</div>
+                    <div class="tab-label">${label}</div>
                 </a>
             `;
         }).join('');
@@ -104,47 +115,21 @@ export function initTabBar(options = {}) {
         syncTabBarLabels(tabBarEl);
     }
 
-    /* Listen for language change events globally */
-    window.addEventListener('sys-lang-change', () => {
-        syncTabBarLabels(tabBarEl);
-    });
+    /* Listen for language change events globally once */
+    if (!window.__tabBarLangBound) {
+        window.__tabBarLangBound = true;
+        window.addEventListener('sys-lang-change', () => {
+            const currentTabBar = document.getElementById('apple-tab-bar');
+            if (currentTabBar) {
+                syncTabBarLabels(currentTabBar);
+            }
+        });
+    }
 
     /* Synchronize standalone positioning immediately after mounting or binding */
     syncStandaloneTabBar();
 
-    /* If on a subpage, mark body and hide tab bar on mobile */
-    if (isSubpageRoute()) {
-        document.body.classList.add('is-subpage');
-        if (tabBarEl && isMobileLayout()) {
-            tabBarEl.style.setProperty('display', 'none', 'important');
-        }
-    }
-
     return tabBarEl;
-}
-
-/* ============================================================================
- * Subpage Route Detection Helper
- * ============================================================================ */
-export function isSubpageRoute(pathname) {
-    const p = (pathname || (typeof window !== 'undefined' ? window.location.pathname : '')).toLowerCase();
-    if (p.includes('/detail.html') ||
-        p.includes('/biography/') ||
-        p.includes('/events/') ||
-        p.includes('/about/') ||
-        p.includes('/thanks/') ||
-        p.includes('/language.html')) {
-        return true;
-    }
-    if (typeof document !== 'undefined') {
-        if (document.body && (document.body.classList.contains('is-subpage') || document.body.classList.contains('page-subpage'))) {
-            return true;
-        }
-        if (document.querySelector('.nav-back-link')) {
-            return true;
-        }
-    }
-    return false;
 }
 
 /* ============================================================================
@@ -152,8 +137,9 @@ export function isSubpageRoute(pathname) {
  * Fixes WebKit "chin gap" / status bar offset bug where WebKit pulls bottom: 0
  * upward by the status bar height (~59px-64px) on standalone PWA launch.
  * ============================================================================ */
-export function syncStandaloneTabBar() {
+export function syncStandaloneTabBar(retryCount = 0) {
     if (typeof window === 'undefined' || typeof document === 'undefined') return;
+    if (isSubpageRoute()) return;
 
     const isIOSStandalone = ('standalone' in window.navigator) && window.navigator.standalone;
     const isPWAStandalone = window.matchMedia && window.matchMedia('(display-mode: standalone)').matches;
@@ -166,8 +152,10 @@ export function syncStandaloneTabBar() {
 
     const tabBar = document.querySelector('.apple-tab-bar');
     if (!tabBar) {
-        /* Retry when element is ready in DOM */
-        requestAnimationFrame(syncStandaloneTabBar);
+        /* Cap retries so standalone checks never spin indefinitely if absent */
+        if (retryCount < 30 && document.readyState !== 'complete') {
+            requestAnimationFrame(() => syncStandaloneTabBar(retryCount + 1));
+        }
         return;
     }
 
@@ -220,42 +208,19 @@ if (typeof window !== 'undefined') {
  * Section 3: Apple Mobile Tab Bar Tap Feedback & Instant Activity Indicator
  * ============================================================================ */
 
-/* Canonical root routes mapped to absolute site paths */
-const CANONICAL_TAB_ROUTES = {
-    home: 'index.html',
-    announcement: 'pages/announcement/announcement.html',
-    library: 'pages/library/library.html',
-    settings: 'pages/settings/settings.html'
-};
-
-/* Top Navigation Bar Titles for Mobile Tabs */
-const MOBILE_TOP_TITLES = {
-    tc: {
-        home: '',
-        announcement: '公告',
-        library: '資料庫',
-        settings: '設定',
-        biography: '傳記',
-        xinhai: '辛亥特展',
-        whampoa: '黃埔特展',
-        mayfourth: '五四特展',
-        militaries: '軍事特展',
-        about: '關於本館',
-        thanks: '特別鳴謝'
-    },
-    sc: {
-        home: '',
-        announcement: '公告',
-        library: '资料库',
-        settings: '设置',
-        biography: '传记',
-        xinhai: '辛亥特展',
-        whampoa: '黄埔特展',
-        mayfourth: '五四特展',
-        militaries: '军事特展',
-        about: '关于本馆',
-        thanks: '特别鸣谢'
-    }
+/* Top Navigation Bar Title Key Mapping for Mobile Tabs */
+const MOBILE_TOP_TITLE_KEYS = {
+    home: '',
+    announcement: 'tab.announcement',
+    library: 'tab.library',
+    settings: 'tab.settings',
+    biography: 'nav.mobile_title_biography',
+    xinhai: 'nav.mobile_title_xinhai',
+    whampoa: 'nav.mobile_title_whampoa',
+    mayfourth: 'nav.mobile_title_mayfourth',
+    militaries: 'nav.mobile_title_militaries',
+    about: 'nav.mobile_title_about',
+    thanks: 'nav.mobile_title_thanks'
 };
 
 /* Synchronize Tab Bar and Top Nav on Navigation */
@@ -365,9 +330,8 @@ export function updateMobileNavState(targetTabId) {
         }
         const titleEl = topNav.querySelector('#top-nav-title');
         if (titleEl) {
-            const lang = getCurrentLang();
-            const dict = MOBILE_TOP_TITLES[lang] || MOBILE_TOP_TITLES.tc;
-            titleEl.textContent = dict[targetTabId] || dict[activeBottomTabId] || '';
+            const titleKey = MOBILE_TOP_TITLE_KEYS[targetTabId] || MOBILE_TOP_TITLE_KEYS[activeBottomTabId] || '';
+            titleEl.textContent = titleKey ? t(titleKey) : '';
         }
     }
 }

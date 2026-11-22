@@ -7,20 +7,22 @@
  * 3. All prose is written in English.
  * ============================================================================ */
 
-import tcLocale from './i18n/locales/tc.js?v=20260907f';
-import scLocale from './i18n/locales/sc.js?v=20260907f';
+import tcLocale from './i18n/locales/tc.js';
+import scLocale from './i18n/locales/sc.js';
 
 export const STORAGE_KEY = 'sys_memorial_lang';
 export const DEFAULT_LANG = 'tc';
 
 /* ============================================================================
- * Registry & State Management
+ * Registry & Cached State Management
  * ============================================================================ */
 const registry = new Map();
 const aliasMap = new Map();
 let initialized = false;
+let cachedMode = null;
+let cachedEffectiveLang = null;
 
-/* Register pre-bundled and global locales */
+/* Register bundled or dynamically loaded locale packs */
 export function registerLocale(locale) {
     if (!locale || !locale.code || !locale.translations) return;
 
@@ -28,7 +30,7 @@ export function registerLocale(locale) {
     aliasMap.set(locale.code.toLowerCase(), locale.code);
 
     if (Array.isArray(locale.aliases)) {
-        locale.aliases.forEach(alias => {
+        locale.aliases.forEach((alias) => {
             aliasMap.set(alias.toLowerCase(), locale.code);
         });
     }
@@ -42,12 +44,6 @@ export function registerLocale(locale) {
 registerLocale(tcLocale);
 registerLocale(scLocale);
 
-if (typeof globalThis !== 'undefined' && globalThis.__SYS_LOCALES__) {
-    Object.keys(globalThis.__SYS_LOCALES__).forEach(code => {
-        registerLocale(globalThis.__SYS_LOCALES__[code]);
-    });
-}
-
 /* ============================================================================
  * Alias Resolution Engine
  * ============================================================================ */
@@ -59,8 +55,7 @@ export function resolveLocaleCode(input) {
         return aliasMap.get(normalized);
     }
 
-    /* Fallback prefix matching (e.g. "zh-tw" -> "tc", "zh-cn" -> "sc") */
-    const prefix = normalized.split('-')[0].split('_')[0];
+    const prefix = normalized.split(/[-_]/)[0];
     if (aliasMap.has(prefix)) {
         return aliasMap.get(prefix);
     }
@@ -69,45 +64,37 @@ export function resolveLocaleCode(input) {
 }
 
 /* ============================================================================
- * Browser Fingerprint Language Detection
+ * Browser Fingerprint Language Detection (BCP-47 Subtag Parsing)
  * ============================================================================ */
+const TRADITIONAL_SUBTAGS = new Set(['tw', 'hk', 'mo', 'hant', 'cht']);
+const SIMPLIFIED_SUBTAGS = new Set(['cn', 'sg', 'hans', 'chs']);
+
 export function detectBrowserLanguage() {
     if (typeof navigator === 'undefined') return DEFAULT_LANG;
 
-    const navLanguages = navigator.languages || [
-        navigator.language ||
-        navigator.userLanguage ||
-        navigator.browserLanguage ||
-        ''
-    ];
+    const navLanguages = (Array.isArray(navigator.languages) && navigator.languages.length > 0)
+        ? navigator.languages
+        : [
+            navigator.language ||
+            navigator.userLanguage ||
+            navigator.browserLanguage ||
+            ''
+        ];
 
     for (const rawLang of navLanguages) {
         if (!rawLang || typeof rawLang !== 'string') continue;
-        const lang = rawLang.trim().toLowerCase();
+        const parts = rawLang.trim().toLowerCase().split(/[-_]/).filter(Boolean);
+        if (parts.length === 0) continue;
 
-        /* Traditional Chinese indicators (Taiwan, Hong Kong, Macau, Hant script) */
-        if (
-            lang.includes('tw') ||
-            lang.includes('hk') ||
-            lang.includes('mo') ||
-            lang.includes('hant') ||
-            lang === 'cht'
-        ) {
+        if (parts.some((p) => TRADITIONAL_SUBTAGS.has(p))) {
             return 'tc';
         }
 
-        /* Simplified Chinese indicators (China Mainland, Singapore, Hans script) */
-        if (
-            lang.includes('cn') ||
-            lang.includes('sg') ||
-            lang.includes('hans') ||
-            lang === 'chs'
-        ) {
+        if (parts.some((p) => SIMPLIFIED_SUBTAGS.has(p))) {
             return 'sc';
         }
 
-        /* If language is generic Chinese ("zh"), inspect timezone fingerprint */
-        if (lang.startsWith('zh')) {
+        if (parts[0] === 'zh') {
             try {
                 const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
                 if (/Taipei|Hong_Kong|Macau/i.test(timeZone)) {
@@ -127,9 +114,9 @@ export function detectBrowserLanguage() {
 }
 
 /* ============================================================================
- * Language Preference Mode & Effective Language Getters
+ * Language Preference Mode & Effective Language Getters (Memoized)
  * ============================================================================ */
-export function getLanguageMode() {
+function computeLanguageMode() {
     /* 1. URL parameter override takes immediate precedence */
     if (typeof window !== 'undefined' && window.location) {
         try {
@@ -153,31 +140,64 @@ export function getLanguageMode() {
         /* LocalStorage access may fail in restricted iframe environments */
     }
 
-    /* Default mode is 'auto' following browser fingerprint */
     return 'auto';
 }
 
-export function getCurrentLang() {
-    const mode = getLanguageMode();
-    if (mode === 'auto') {
-        return detectBrowserLanguage();
-    }
-    return resolveLocaleCode(mode);
+function syncDocumentLanguageAttributes(effectiveLang) {
+    if (typeof document === 'undefined' || !document.documentElement) return;
+    document.documentElement.lang = (effectiveLang === 'tc') ? 'zh-TW' : 'zh-CN';
+    document.documentElement.dataset.lang = effectiveLang;
 }
 
-export const getLocale = getCurrentLang;
-export const getLanguage = getCurrentLang;
+export function refreshLanguageCache() {
+    cachedMode = computeLanguageMode();
+    cachedEffectiveLang = (cachedMode === 'auto')
+        ? detectBrowserLanguage()
+        : resolveLocaleCode(cachedMode);
+    syncDocumentLanguageAttributes(cachedEffectiveLang);
+    return cachedEffectiveLang;
+}
+
+export function getLanguageMode() {
+    if (cachedMode === null) {
+        refreshLanguageCache();
+    }
+    return cachedMode;
+}
+
+export function getCurrentLang() {
+    if (cachedEffectiveLang === null) {
+        refreshLanguageCache();
+    }
+    return cachedEffectiveLang;
+}
 
 /* ============================================================================
- * Global Language Setter
+ * Global Language Setter & Event Broadcaster
  * ============================================================================ */
+function emitLanguageChange(effectiveLang, mode) {
+    if (typeof window === 'undefined') return;
+    try {
+        window.dispatchEvent(new CustomEvent('sys-lang-change', {
+            detail: {
+                lang: effectiveLang,
+                mode,
+                isTraditional: effectiveLang === 'tc',
+                locale: effectiveLang
+            }
+        }));
+    } catch (e) {
+        /* Ignore event dispatch errors */
+    }
+}
+
 export function setGlobalLang(input) {
     let mode = 'auto';
     if (input === 'tc' || input === 'sc' || input === 'auto') {
         mode = input;
     } else if (typeof input === 'string') {
         const resolved = resolveLocaleCode(input);
-        mode = resolved === 'tc' || resolved === 'sc' ? resolved : 'auto';
+        mode = (resolved === 'tc' || resolved === 'sc') ? resolved : 'auto';
     }
 
     try {
@@ -186,50 +206,29 @@ export function setGlobalLang(input) {
         /* Silently catch storage write exceptions */
     }
 
-    const effectiveLang = (mode === 'auto') ? detectBrowserLanguage() : mode;
-    if (typeof document !== 'undefined') {
-        document.documentElement.lang = (effectiveLang === 'tc') ? 'zh-TW' : 'zh-CN';
-    }
+    cachedMode = mode;
+    cachedEffectiveLang = (mode === 'auto')
+        ? detectBrowserLanguage()
+        : resolveLocaleCode(mode);
 
+    syncDocumentLanguageAttributes(cachedEffectiveLang);
     applyTranslations();
     syncTabBarLabels();
-
-    /* Dispatch standard and compatibility events */
-    if (typeof window !== 'undefined') {
-        try {
-            window.dispatchEvent(new CustomEvent('sys-lang-change', {
-                detail: {
-                    lang: effectiveLang,
-                    mode: mode,
-                    isTraditional: effectiveLang === 'tc',
-                    locale: effectiveLang
-                }
-            }));
-            window.dispatchEvent(new CustomEvent('situla:languagechange', {
-                detail: {
-                    language: effectiveLang,
-                    locale: effectiveLang,
-                    mode: mode
-                }
-            }));
-            window.dispatchEvent(new CustomEvent('i18n:localeChanged', {
-                detail: {
-                    language: effectiveLang,
-                    locale: effectiveLang,
-                    mode: mode
-                }
-            }));
-        } catch (e) {
-            /* Ignore event dispatch errors */
-        }
-    }
+    emitLanguageChange(cachedEffectiveLang, mode);
 }
-
-export const setLanguage = setGlobalLang;
 
 /* ============================================================================
  * Translation Lookup with Parameter Interpolation {0}, {1}
  * ============================================================================ */
+function hasTranslation(key) {
+    if (!key) return false;
+    const current = getCurrentLang();
+    const activeDict = registry.get(current)?.translations;
+    const fallbackDict = registry.get(DEFAULT_LANG)?.translations || registry.values().next().value?.translations;
+    return (activeDict && typeof activeDict[key] === 'string') ||
+           (fallbackDict && typeof fallbackDict[key] === 'string');
+}
+
 export function t(key, ...args) {
     if (!key) return '';
 
@@ -256,92 +255,94 @@ export function t(key, ...args) {
 export function applyTranslations(root = (typeof document !== 'undefined' ? document : null)) {
     if (!root) return;
 
-    /* 1. Text Content */
-    root.querySelectorAll('[data-i18n]').forEach(el => {
+    const currentLang = getCurrentLang();
+    syncDocumentLanguageAttributes(currentLang);
+
+    /* 1. Text Content (including <title data-i18n="...">) */
+    root.querySelectorAll('[data-i18n]').forEach((el) => {
         const key = el.getAttribute('data-i18n');
+        if (!hasTranslation(key)) return;
         const translated = t(key);
-        if (translated && translated !== key) {
+        if (el.tagName === 'TITLE') {
+            document.title = translated;
+        } else {
             el.textContent = translated;
         }
     });
 
     /* 2. Input Placeholders */
-    root.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    root.querySelectorAll('[data-i18n-placeholder]').forEach((el) => {
         const key = el.getAttribute('data-i18n-placeholder');
-        const translated = t(key);
-        if (translated && translated !== key) {
-            el.setAttribute('placeholder', translated);
+        if (hasTranslation(key)) {
+            el.setAttribute('placeholder', t(key));
         }
     });
 
     /* 3. Title Tooltips */
-    root.querySelectorAll('[data-i18n-title]').forEach(el => {
+    root.querySelectorAll('[data-i18n-title]').forEach((el) => {
         const key = el.getAttribute('data-i18n-title');
-        const translated = t(key);
-        if (translated && translated !== key) {
-            el.setAttribute('title', translated);
+        if (hasTranslation(key)) {
+            el.setAttribute('title', t(key));
         }
     });
 
     /* 4. Accessibility aria-label */
-    root.querySelectorAll('[data-i18n-aria-label]').forEach(el => {
+    root.querySelectorAll('[data-i18n-aria-label]').forEach((el) => {
         const key = el.getAttribute('data-i18n-aria-label');
-        const translated = t(key);
-        if (translated && translated !== key) {
-            el.setAttribute('aria-label', translated);
+        if (hasTranslation(key)) {
+            el.setAttribute('aria-label', t(key));
         }
     });
 
-    /* 5. Page Title */
+    /* 5. Image alt attributes */
+    root.querySelectorAll('[data-i18n-alt]').forEach((el) => {
+        const key = el.getAttribute('data-i18n-alt');
+        if (hasTranslation(key)) {
+            el.setAttribute('alt', t(key));
+        }
+    });
+
+    /* 6. Explicit Page Title Key */
     const pageTitleEl = root.querySelector('[data-page-title-key]');
     if (pageTitleEl) {
         const key = pageTitleEl.getAttribute('data-page-title-key');
-        const translated = t(key);
-        if (translated && translated !== key) {
-            document.title = translated;
+        if (hasTranslation(key)) {
+            document.title = t(key);
         }
     }
 }
 
 /* ============================================================================
- * Tab Definitions for Apple Native Bottom Tab Bar
- * ============================================================================ */
-export const TAB_DEFINITIONS = {
-    tc: [
-        { id: 'home',         label: '主頁' },
-        { id: 'announcement', label: '公告' },
-        { id: 'library',      label: '資料庫' },
-        { id: 'settings',     label: '設定' }
-    ],
-    sc: [
-        { id: 'home',         label: '主页' },
-        { id: 'announcement', label: '公告' },
-        { id: 'library',      label: '资料库' },
-        { id: 'settings',     label: '设置' }
-    ]
-};
-
-/* ============================================================================
  * Tab Bar Bilingual Label Synchronizer
  * ============================================================================ */
+const TAB_IDS = ['home', 'announcement', 'library', 'settings'];
+
 export function syncTabBarLabels(rootEl = (typeof document !== 'undefined' ? document : null)) {
     if (!rootEl) return;
-    const lang = getCurrentLang();
-    const tabs = TAB_DEFINITIONS[lang] || TAB_DEFINITIONS.tc;
 
-    tabs.forEach(tab => {
-        const labelEl = rootEl.querySelector(`[data-tab-id="${tab.id}"] .tab-label`);
-        if (labelEl) {
-            labelEl.textContent = tab.label;
+    const navEl = rootEl.matches?.('#apple-tab-bar') ? rootEl : rootEl.querySelector?.('#apple-tab-bar');
+    if (navEl) {
+        navEl.setAttribute('aria-label', t('tab.aria_nav'));
+    }
+
+    TAB_IDS.forEach((id) => {
+        const label = t(`tab.${id}`);
+        const itemEl = rootEl.querySelector?.(`[data-tab-id="${id}"]`);
+        if (itemEl) {
+            itemEl.setAttribute('aria-label', label);
+            const labelEl = itemEl.querySelector('.tab-label');
+            if (labelEl) {
+                labelEl.textContent = label;
+            }
         }
     });
 }
 
 /* ============================================================================
- * Engine Object & Global Exports
+ * Engine Object & Global Lifecycle Listeners
  * ============================================================================ */
 export function getAvailableLanguages() {
-    return Array.from(registry.values()).map(l => ({
+    return Array.from(registry.values()).map((l) => ({
         code: l.code,
         name: l.name || l.code
     }));
@@ -351,58 +352,56 @@ const i18nEngine = {
     t,
     register: registerLocale,
     setGlobalLang,
-    setLanguage: setGlobalLang,
     getLanguageMode,
     getCurrentLang,
-    getLanguage: getCurrentLang,
-    getLocale: getCurrentLang,
+    refreshLanguageCache,
     detectBrowserLanguage,
     getAvailableLanguages,
     applyTranslations,
     resolveLocaleCode,
     syncTabBarLabels,
-    TAB_DEFINITIONS,
     STORAGE_KEY,
     DEFAULT_LANG
 };
 
-/* Listen for live browser language change when in auto mode */
 if (typeof window !== 'undefined') {
     window.addEventListener('languagechange', () => {
         if (getLanguageMode() === 'auto') {
-            const effectiveLang = detectBrowserLanguage();
-            if (typeof document !== 'undefined') {
-                document.documentElement.lang = (effectiveLang === 'tc') ? 'zh-TW' : 'zh-CN';
-            }
+            const effectiveLang = refreshLanguageCache();
             applyTranslations();
             syncTabBarLabels();
-            try {
-                window.dispatchEvent(new CustomEvent('sys-lang-change', {
-                    detail: {
-                        lang: effectiveLang,
-                        mode: 'auto',
-                        isTraditional: effectiveLang === 'tc',
-                        locale: effectiveLang
-                    }
-                }));
-            } catch (e) {
-                /* Ignore event dispatch errors */
-            }
+            emitLanguageChange(effectiveLang, 'auto');
+        }
+    });
+
+    window.addEventListener('popstate', () => {
+        const prevLang = cachedEffectiveLang;
+        const effectiveLang = refreshLanguageCache();
+        if (effectiveLang !== prevLang) {
+            applyTranslations();
+            syncTabBarLabels();
+            emitLanguageChange(effectiveLang, getLanguageMode());
+        }
+    });
+
+    window.addEventListener('storage', (e) => {
+        if (e.key === STORAGE_KEY) {
+            const effectiveLang = refreshLanguageCache();
+            applyTranslations();
+            syncTabBarLabels();
+            emitLanguageChange(effectiveLang, getLanguageMode());
         }
     });
 
     globalThis.t = t;
     globalThis.setGlobalLang = setGlobalLang;
-    globalThis.setLanguage = setGlobalLang;
     globalThis.getCurrentLang = getCurrentLang;
     globalThis.getLanguageMode = getLanguageMode;
     globalThis.i18n = i18nEngine;
 }
 
-/* Initialize DOM translations on load */
 if (typeof document !== 'undefined') {
-    const initialLang = getCurrentLang();
-    document.documentElement.lang = (initialLang === 'tc') ? 'zh-TW' : 'zh-CN';
+    refreshLanguageCache();
     initialized = true;
 
     if (document.readyState === 'loading') {

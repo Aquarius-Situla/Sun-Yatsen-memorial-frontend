@@ -70,13 +70,15 @@ function getMarkdownStyles(isLight) {
     }
 }
 
-import { getCurrentLang, getLanguageMode, setGlobalLang } from './modules/i18n.js?v=20260907f';
-import { initTabBar, syncStandaloneTabBar } from './modules/tab-bar.js?v=20260907f';
-import { setupDiagnosticTrigger } from './modules/debug-panel.js?v=20260907f';
-import { initIOSNavTransition } from './modules/ios-nav-transition.js?v=20260907f';
-import { initDesktopShell } from './modules/desktop-shell.js?v=20260907f';
-import { showActivityIndicator, hideActivityIndicator } from './modules/activity-indicator.js?v=20260907f';
-import { initDeviceLayout, initOrientationGuard, isMobileLayout, isDesktopLayout } from './modules/device-detect.js?v=20260907f';
+import { t, applyTranslations, syncTabBarLabels, getCurrentLang, getLanguageMode, setGlobalLang } from './modules/i18n.js';
+import { initTabBar, syncStandaloneTabBar } from './modules/tab-bar.js';
+import { setupDiagnosticTrigger } from './modules/debug-panel.js';
+import { initIOSNavTransition } from './modules/ios-nav-transition.js';
+import { initDesktopShell } from './modules/desktop-shell.js';
+import { showActivityIndicator, hideActivityIndicator } from './modules/activity-indicator.js';
+import { initDeviceLayout, initOrientationGuard, isMobileLayout, isDesktopLayout } from './modules/device-detect.js';
+import { getPageSignal } from './core/lifecycle.js';
+import { getBackNavMeta, getPageTopTitleKey, isSubpageRoute } from './core/routes.js';
 
 /* ============================================================================
  * Subpage Initialization Engine
@@ -84,12 +86,12 @@ import { initDeviceLayout, initOrientationGuard, isMobileLayout, isDesktopLayout
 export function initSubpage(options) {
     const {
         texts = null,
-        tabs = null,
-        defaultTab = null,
         activeBottomTab = null,
         basePath = '../../',
         onRendered = null
     } = options;
+
+    const pageSignal = getPageSignal();
 
     /* Initialize device layout classes and smartphone orientation blocker */
     initDeviceLayout();
@@ -98,7 +100,7 @@ export function initSubpage(options) {
     /* Initialize diagnostic HUD trigger (3-tap on header) */
     setupDiagnosticTrigger();
 
-    /* Initialize Apple Native Bottom Tab Bar and Desktop Sidebar */
+    /* Initialize Apple Native Bottom Tab Bar (root hubs only) and Desktop Sidebar */
     if (activeBottomTab) {
         initTabBar({
             activeTab: activeBottomTab,
@@ -110,29 +112,26 @@ export function initSubpage(options) {
         });
     }
 
-    /* Synchronize standalone viewport to eliminate chin gap on short subpages */
-    syncStandaloneTabBar();
-
-    /* Distinguish between menu hub pages and actual subpages */
+    /* Distinguish between root menu hub pages and pushed subpages */
     const isMenuHubPage = document.body.classList.contains('page-announcement-menu') ||
                           document.body.classList.contains('page-settings-menu') ||
                           document.body.classList.contains('page-library-menu') ||
-                          !document.querySelector('.apple-top-nav .nav-back-link');
+                          !isSubpageRoute();
 
     if (!isMenuHubPage) {
-        /* Mark body as subpage and hide Apple Native Bottom Tab Bar on mobile */
         document.body.classList.add('is-subpage');
         const tabBarEl = document.getElementById('apple-tab-bar');
         if (tabBarEl && isMobileLayout()) {
             tabBarEl.style.setProperty('display', 'none', 'important');
         }
     } else {
-        /* Ensure menu hub page restores the bottom tab bar */
         document.body.classList.remove('is-subpage');
         const tabBarEl = document.getElementById('apple-tab-bar');
         if (tabBarEl) {
             tabBarEl.style.removeProperty('display');
         }
+        /* Synchronize standalone viewport on root hub pages */
+        syncStandaloneTabBar();
     }
 
     /* Guarantee Apple Native Top Navigation Bar and Back Link are visible and interactable on mobile only */
@@ -174,11 +173,9 @@ export function initSubpage(options) {
     const heroDate = document.getElementById('hero-date');
     const heroDesc = document.getElementById('hero-desc');
     const pageTitle = document.getElementById('page-title');
-    const iosRows = document.querySelectorAll('.ios-row[data-tab]');
     const iosOptionItems = document.querySelectorAll('.ios-option-item[data-lang]');
 
     let isTraditional = getCurrentLang() === 'tc';
-    let activeTabId = defaultTab;
 
     /* Check URL param for explicit override */
     const params = new URLSearchParams(window.location.search);
@@ -188,19 +185,16 @@ export function initSubpage(options) {
         isTraditional = true;
     }
 
-    /* Initialize tab from URL if present */
-    const initialTab = params.get('tab');
-    if (initialTab && tabs && tabs.some(t => t.id === initialTab)) {
-        activeTabId = initialTab;
-    } else if (!activeTabId && tabs && tabs.length > 0) {
-        activeTabId = tabs[0].id;
-    }
-
     function updateContent() {
+        applyTranslations();
         document.documentElement.lang = isTraditional ? 'zh-TW' : 'zh-CN';
 
+        if (isMenuHubPage) {
+            syncTabBarLabels();
+        }
+
         if (langBtn) {
-            langBtn.textContent = isTraditional ? '切换至简化字' : '切換至正體字';
+            langBtn.textContent = isTraditional ? t('common.toggle_to_sc') : t('common.toggle_to_tc');
         }
 
         /* Update iOS Inset Grouped Option Selection (e.g. Language Selector) */
@@ -215,44 +209,33 @@ export function initSubpage(options) {
             }
         });
 
-        if (tabs && tabs.length > 0) {
-            /* Synchronize iOS Inset Grouped Rows */
-            const currentTabObj = tabs.find(t => t.id === activeTabId) || tabs[0];
-            iosRows.forEach(row => {
-                const tabId = row.getAttribute('data-tab');
-                const tabObj = tabs.find(t => t.id === tabId);
-                if (tabObj) {
-                    const titleEl = row.querySelector('.ios-row-title span') || row.querySelector('.ios-row-title');
-                    if (titleEl) {
-                        titleEl.textContent = isTraditional ? tabObj.labelTc : tabObj.labelSc;
-                    }
-                }
-                if (tabId === currentTabObj.id) {
-                    row.classList.add('expanded');
-                } else {
-                    row.classList.remove('expanded');
-                }
-            });
-
-            const newSrc = isTraditional ? currentTabObj.srcTc : currentTabObj.srcSc;
-            if (mdViewer && mdViewer.getAttribute('src') !== newSrc) {
-                mdViewer.setAttribute('src', newSrc);
-            }
-        } else if (texts) {
+        if (texts) {
             /* Standard subpage / hero banner handling */
-            const t = texts[isTraditional ? 'tc' : 'sc'];
-            if (langBtn && t.btn) langBtn.textContent = t.btn;
-            if (heroTitle && t.title) heroTitle.textContent = t.title;
-            if (heroDate && t.date) heroDate.textContent = t.date;
-            if (heroDesc && t.desc) heroDesc.textContent = t.desc;
-            if (pageTitle && t.pageTitle) pageTitle.textContent = t.pageTitle;
+            const localized = texts[isTraditional ? 'tc' : 'sc'] || {};
+            if (langBtn && localized.btn) langBtn.textContent = localized.btn;
+            if (heroTitle) {
+                if (localized.titleKey) heroTitle.textContent = t(localized.titleKey);
+                else if (localized.title) heroTitle.textContent = localized.title;
+            }
+            if (heroDate) {
+                if (localized.dateKey) heroDate.textContent = t(localized.dateKey);
+                else if (localized.date) heroDate.textContent = localized.date;
+            }
+            if (heroDesc) {
+                if (localized.descKey) heroDesc.textContent = t(localized.descKey);
+                else if (localized.desc) heroDesc.textContent = localized.desc;
+            }
+            if (pageTitle) {
+                if (localized.pageTitleKey) document.title = t(localized.pageTitleKey);
+                else if (localized.pageTitle) document.title = localized.pageTitle;
+            }
 
-            if (mdViewer && t.src && mdViewer.getAttribute('src') !== t.src) {
-                mdViewer.setAttribute('src', t.src);
+            if (mdViewer && localized.src && mdViewer.getAttribute('src') !== localized.src) {
+                mdViewer.setAttribute('src', localized.src);
             }
         }
 
-        /* Synchronize Apple Native Back Button Text (Mobile: 資料庫, Desktop: 文獻資料庫) */
+        /* Synchronize Apple Native Back Button Text */
         const navBackText = document.getElementById('nav-back-text');
         const navBackLink = document.getElementById('nav-back-link');
         const desktopBackText = document.querySelector('.top-back-btn span');
@@ -267,95 +250,33 @@ export function initSubpage(options) {
             }
         }
 
-        const path = window.location.pathname;
-        if (path.includes('/events/') || path.includes('/biography/')) {
-            if (!mobileBackLabel) mobileBackLabel = isTraditional ? '資料庫' : '资料库';
-            desktopBackLabel = isTraditional ? '文獻資料庫' : '文献资料库';
-        } else if (path.includes('/about/') || path.includes('/thanks/') || path.includes('/library/language.html')) {
-            if (!mobileBackLabel) mobileBackLabel = isTraditional ? '設定' : '设置';
-            desktopBackLabel = isTraditional ? '系統設定' : '系统设置';
-        } else if (path.includes('/announcement/detail.html')) {
-            if (!mobileBackLabel) mobileBackLabel = isTraditional ? '公告' : '公告';
-            desktopBackLabel = isTraditional ? '堂務公告' : '堂务公告';
-        } else {
-            if (!mobileBackLabel) mobileBackLabel = isTraditional ? '返回' : '返回';
-            desktopBackLabel = isTraditional ? '返回' : '返回';
-        }
+        const backMeta = getBackNavMeta(window.location.href);
+        if (!mobileBackLabel) mobileBackLabel = t(backMeta.mobileKey);
+        desktopBackLabel = t(backMeta.desktopKey);
 
-        if (navBackText) {
+        if (navBackText && !navBackText.hasAttribute('data-i18n')) {
             navBackText.textContent = mobileBackLabel;
         }
-        if (desktopBackText) {
+        if (desktopBackText && !desktopBackText.hasAttribute('data-i18n')) {
             desktopBackText.textContent = desktopBackLabel;
         }
 
         /* Synchronize Apple Native Frosted Top Navigation Bar Title */
         const topNavTitle = document.getElementById('top-nav-title');
-        if (topNavTitle) {
-            if (window.location.pathname.includes('/about/')) {
-                topNavTitle.textContent = isTraditional ? '關於與聲明' : '关于与声明';
-            } else if (window.location.pathname.includes('/thanks/')) {
-                topNavTitle.textContent = isTraditional ? '特別鳴謝' : '特别鸣谢';
-            } else if (window.location.pathname.includes('/biography/')) {
-                topNavTitle.textContent = isTraditional ? '國父生平' : '国父生平';
-            } else if (window.location.pathname.includes('/announcement/detail.html')) {
-                if (texts && texts[isTraditional ? 'tc' : 'sc'] && texts[isTraditional ? 'tc' : 'sc'].title) {
-                    topNavTitle.textContent = texts[isTraditional ? 'tc' : 'sc'].title;
-                }
-            } else if (window.location.pathname.includes('/announcement/')) {
-                topNavTitle.textContent = isTraditional ? '公告' : '公告';
-            } else if (window.location.pathname.includes('/library/language.html')) {
-                topNavTitle.textContent = isTraditional ? '語言偏好' : '语言偏好';
-            } else if (window.location.pathname.includes('/library/')) {
-                topNavTitle.textContent = isTraditional ? '資料庫' : '资料库';
-            } else if (texts && texts[isTraditional ? 'tc' : 'sc'] && texts[isTraditional ? 'tc' : 'sc'].title) {
-                topNavTitle.textContent = texts[isTraditional ? 'tc' : 'sc'].title;
+        if (topNavTitle && !topNavTitle.hasAttribute('data-i18n')) {
+            const localized = texts ? texts[isTraditional ? 'tc' : 'sc'] : null;
+            const routeTitleKey = getPageTopTitleKey(window.location.href);
+            if (localized && localized.titleKey) {
+                topNavTitle.textContent = t(localized.titleKey);
+            } else if (localized && localized.title) {
+                topNavTitle.textContent = localized.title;
+            } else if (routeTitleKey) {
+                topNavTitle.textContent = t(routeTitleKey);
             }
         }
     }
 
     /* Native navigation via href is used for nav-back-link to ensure reliable transitions */
-
-    /* Option Items Event Listeners (Global Language Click) */
-    iosOptionItems.forEach(opt => {
-        opt.addEventListener('click', () => {
-            const newLang = opt.getAttribute('data-lang');
-            if (newLang === 'tc' || newLang === 'sc') {
-                isTraditional = newLang === 'tc';
-                setGlobalLang(newLang);
-                updateContent();
-            }
-        });
-    });
-
-    /* General Accordion Row Click Handlers */
-    const allAccordionRows = document.querySelectorAll('.ios-row[data-accordion-target]');
-    allAccordionRows.forEach(row => {
-        row.addEventListener('click', () => {
-            const targetId = row.getAttribute('data-accordion-target');
-            const targetEl = document.getElementById(targetId);
-            const isExpanded = row.classList.contains('expanded');
-
-            if (isExpanded) {
-                row.classList.remove('expanded');
-                if (targetEl) targetEl.classList.remove('open');
-            } else {
-                row.classList.add('expanded');
-                if (targetEl) targetEl.classList.add('open');
-            }
-        });
-    });
-
-    /* Tab-switching iOS Rows */
-    iosRows.forEach(row => {
-        row.addEventListener('click', () => {
-            const targetTab = row.getAttribute('data-tab');
-            if (targetTab && targetTab !== activeTabId) {
-                activeTabId = targetTab;
-                updateContent();
-            }
-        });
-    });
 
     /* Global Language Synchronization Listener */
     window.addEventListener('sys-lang-change', (e) => {
@@ -363,14 +284,14 @@ export function initSubpage(options) {
             isTraditional = e.detail.lang === 'tc';
             updateContent();
         }
-    });
+    }, { signal: pageSignal });
 
     if (langBtn) {
         langBtn.addEventListener('click', () => {
             isTraditional = !isTraditional;
             setGlobalLang(isTraditional ? 'tc' : 'sc');
             updateContent();
-        });
+        }, { signal: pageSignal });
     }
 
     function handleMarkdownRendered() {
@@ -389,12 +310,12 @@ export function initSubpage(options) {
             });
         }
         if (typeof onRendered === 'function') {
-            onRendered({ isTraditional, activeTabId, mdViewer });
+            onRendered({ isTraditional, mdViewer });
         }
     }
 
     if (mdViewer) {
-        mdViewer.addEventListener('zero-md-rendered', handleMarkdownRendered);
+        mdViewer.addEventListener('zero-md-rendered', handleMarkdownRendered, { signal: pageSignal });
         if (mdViewer.shadowRoot && mdViewer.shadowRoot.querySelector('.markdown-body')) {
             handleMarkdownRendered();
         }
@@ -404,7 +325,7 @@ export function initSubpage(options) {
 
     /* Theme Switcher for Zero-MD */
     const colorSchemeQuery = window.matchMedia('(prefers-color-scheme: light)');
-    function updateMarkdownTheme() {
+    function applyMarkdownTemplateTheme() {
         if (!mdViewer) return;
         const isLight = colorSchemeQuery.matches;
         const template = mdViewer.querySelector('template');
@@ -420,16 +341,25 @@ export function initSubpage(options) {
                 style.textContent = getMarkdownStyles(isLight);
             }
         }
-        const currentSrc = mdViewer.getAttribute('src');
-        if (currentSrc) {
+    }
+
+    function updateMarkdownTheme() {
+        if (!mdViewer) return;
+        applyMarkdownTemplateTheme();
+        const fallbackSrc = mdViewer.getAttribute('src');
+        if (fallbackSrc) {
             mdViewer.removeAttribute('src');
-            requestAnimationFrame(() => mdViewer.setAttribute('src', currentSrc));
+            requestAnimationFrame(() => {
+                if (pageSignal.aborted) return;
+                const liveSrc = mdViewer.getAttribute('src') || fallbackSrc;
+                mdViewer.setAttribute('src', liveSrc);
+            });
         }
     }
 
-    colorSchemeQuery.addEventListener('change', updateMarkdownTheme);
+    colorSchemeQuery.addEventListener('change', updateMarkdownTheme, { signal: pageSignal });
     if (colorSchemeQuery.matches) {
-        updateMarkdownTheme();
+        applyMarkdownTemplateTheme();
     }
 
     /* Initial Render */
@@ -442,11 +372,6 @@ export function initSubpage(options) {
         isTraditional: () => isTraditional,
         setTraditional: (val) => {
             isTraditional = !!val;
-            updateContent();
-        },
-        getActiveTab: () => activeTabId,
-        setActiveTab: (tabId) => {
-            activeTabId = tabId;
             updateContent();
         },
         updateContent

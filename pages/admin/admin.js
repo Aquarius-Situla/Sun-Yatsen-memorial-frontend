@@ -2,6 +2,8 @@
  * Admin Dashboard Logic
  * ============================================================================ */
 
+import { t, applyTranslations, getCurrentLang } from '../../js/modules/i18n.js';
+
 const loginScreen = document.getElementById('login-screen');
 const dashboardScreen = document.getElementById('dashboard-screen');
 const loginForm = document.getElementById('login-form');
@@ -57,13 +59,13 @@ if (loginForm) {
         /* Trigger Captcha before actual login attempt. */
         const submitBtn = loginForm.querySelector('button');
         const oldText = submitBtn.textContent;
-        submitBtn.textContent = '安全驗證中...';
+        submitBtn.textContent = t('admin.verifying');
         submitBtn.disabled = true;
 
         showCaptcha(async () => {
             const pwd = passwordInput.value.trim();
             if (!pwd) {
-                showToast('請輸入密碼');
+                showToast(t('admin.enter_password'));
                 submitBtn.textContent = oldText;
                 submitBtn.disabled = false;
                 return;
@@ -71,7 +73,7 @@ if (loginForm) {
             
             /* Hash password and attempt login. */
             try {
-                submitBtn.textContent = '登入中...';
+                submitBtn.textContent = t('admin.logging_in');
                 const tempKey = await hashSHA256(pwd);
                 
                 const res = await fetch(WORKER_API + '/admin/config', {
@@ -84,18 +86,18 @@ if (loginForm) {
                     localStorage.setItem('danmaku_admin_key', adminKey);
                     showDashboard();
                 } else {
-                    showToast('密碼錯誤');
+                    showToast(t('admin.wrong_password'));
                     passwordInput.value = '';
                     passwordInput.focus();
                 }
             } catch (err) {
                 if (err.message === "INSECURE_CONTEXT") {
-                    showToast('瀏覽器安全限制：非 HTTPS 環境無法執行加密，請使用 localhost 或綁定 SSL');
+                    showToast(t('admin.insecure_context'));
                 } else {
-                    showToast('網路連線失敗，請稍後再試');
+                    showToast(t('admin.network_retry'));
                 }
             } finally {
-                submitBtn.textContent = oldText;
+                submitBtn.textContent = t('admin.login_btn');
                 submitBtn.disabled = false;
             }
         });
@@ -109,7 +111,7 @@ if (loginForm) {
             mutations.forEach((mutation) => {
                 if (mutation.attributeName === 'style') {
                     if (overlay.style.display === 'none') {
-                        submitBtn.textContent = oldText;
+                        submitBtn.textContent = t('admin.login_btn');
                         submitBtn.disabled = false;
                     }
                 }
@@ -208,7 +210,7 @@ if (downloadJsonBtn) {
     downloadJsonBtn.addEventListener('click', () => {
         const list = window.currentDanmakuList || [];
         if (list.length === 0) {
-            showToast('目前沒有彈幕可以下載');
+            showToast(t('admin.no_danmaku_download'));
             return;
         }
         const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(list, null, 2));
@@ -217,14 +219,15 @@ if (downloadJsonBtn) {
         dlAnchorElem.setAttribute("download", `danmaku_samples_${new Date().getTime()}.json`);
         dlAnchorElem.click();
         dlAnchorElem.remove();
-        showToast('彈幕樣本下載成功');
+        showToast(t('admin.download_success'));
     });
 }
 
-/* Format timestamp into localized Taiwan time string. */
+/* Format timestamp into localized Chinese time string. */
 function formatTime(timestamp) {
     const d = new Date(timestamp);
-    return d.toLocaleString('zh-TW', {
+    const localeCode = getCurrentLang() === 'sc' ? 'zh-CN' : 'zh-TW';
+    return d.toLocaleString(localeCode, {
         month: 'short', day: 'numeric',
         hour: '2-digit', minute: '2-digit', second: '2-digit'
     });
@@ -268,8 +271,12 @@ async function loadConfig() {
                 renderAiModels();
         
                 if (data.aiLastLog) {
+                    const logTimeEl = document.getElementById('ai-log-time');
                     document.getElementById('ai-debug-card').style.display = 'block';
-                    document.getElementById('ai-log-time').textContent = "時間: " + new Date(data.aiLastLog.time).toLocaleString();
+                    if (logTimeEl) {
+                        logTimeEl.removeAttribute('data-i18n');
+                        logTimeEl.textContent = t('admin.ai_log_time_prefix') + new Date(data.aiLastLog.time).toLocaleString(getCurrentLang() === 'sc' ? 'zh-CN' : 'zh-TW');
+                    }
                     document.getElementById('ai-log-text').textContent = data.aiLastLog.text;
                     document.getElementById('ai-log-reply').textContent = data.aiLastLog.reply;
                 } else {
@@ -302,15 +309,15 @@ whitelistToggle.addEventListener('change', async (e) => {
         });
         const data = await res.json();
         if (data.success) {
-            showToast(isEnabled ? '白名單模式已開啟' : '白名單模式已關閉');
+            showToast(isEnabled ? t('admin.whitelist_on') : t('admin.whitelist_off'));
 
         } else {
-            showToast('設定失敗：' + (data.error || '權限不足'));
+            showToast(t('admin.setting_failed') + (data.error || t('admin.permission_denied')));
             /* Revert checkbox state upon failure. */
             e.target.checked = !isEnabled;
         }
     } catch (err) {
-        showToast('設定失敗，請檢查網路');
+        showToast(t('admin.setting_network_failed'));
         /* Revert checkbox state upon network error. */
         e.target.checked = !isEnabled;
     } finally {
@@ -331,7 +338,7 @@ if (addAiBtn) {
             if (aiEndpoint) aiEndpoint.value = '';
             if (aiModel) aiModel.value = '';
             if (aiKeys) aiKeys.value = '';
-            if (saveAiBtn) saveAiBtn.textContent = '儲存並加入矩陣';
+            if (saveAiBtn) saveAiBtn.textContent = t('admin.ai_save_btn');
         } else {
             addAiForm.style.display = 'none';
         }
@@ -345,22 +352,23 @@ function renderAiModels() {
     currentAiModels.forEach((model, index) => {
         const div = document.createElement('div');
         div.className = 'list-item';
+        const keyCount = model.keys ? model.keys.split('\n').length : 0;
         div.innerHTML = `
             <div class="item-content" style="min-width: 0; overflow: hidden; padding-right: 8px;">
-                <div class="item-text" style="font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${model.model || 'Unknown Model'}</div>
+                <div class="item-text" style="font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${model.model || t('admin.ai_unknown_model')}</div>
                 <div class="item-meta" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;">
                     <span>${model.endpoint}</span>
                 </div>
-                <div class="item-meta"><span>綁定 ${model.keys ? model.keys.split('\\n').length : 0} 把 Keys</span></div>
+                <div class="item-meta"><span>${t('admin.ai_keys_bound', keyCount)}</span></div>
             </div>
             <div style="display: flex; gap: 8px; align-items: center; flex-shrink: 0;">
-                <button style="background: none; border: none; cursor: pointer; color: var(--text-secondary); padding: 4px; display: flex; align-items: center; justify-content: center;" onclick="editAiModel(${index})" title="設定">
+                <button style="background: none; border: none; cursor: pointer; color: var(--text-secondary); padding: 4px; display: flex; align-items: center; justify-content: center;" onclick="editAiModel(${index})" title="${t('admin.ai_edit_title')}">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <circle cx="12" cy="12" r="3"></circle>
                         <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
                     </svg>
                 </button>
-                <button class="ios-btn destructive" onclick="deleteAiModel(${index})">刪除</button>
+                <button class="ios-btn destructive" onclick="deleteAiModel(${index})">${t('common.delete')}</button>
             </div>
         `;
         aiListContainer.appendChild(div);
@@ -374,7 +382,7 @@ window.editAiModel = function(index) {
     if (aiModel) aiModel.value = model.model || '';
     if (aiKeys) aiKeys.value = model.keys || '';
     if (addAiForm) addAiForm.style.display = 'flex';
-    if (saveAiBtn) saveAiBtn.textContent = '更新此模型設定';
+    if (saveAiBtn) saveAiBtn.textContent = t('admin.ai_update_btn');
     /* Scroll smoothly to editor form. */
     if (addAiForm) addAiForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
 };
@@ -407,12 +415,12 @@ async function saveConfig(silent = false) {
         });
         const data = await res.json();
         if (data.success) {
-            if (!silent) showToast('AI 設定儲存成功！');
+            if (!silent) showToast(t('admin.ai_save_success'));
         } else {
-            if (!silent) showToast('儲存失敗：' + (data.error || '權限不足'));
+            if (!silent) showToast(t('admin.save_failed') + (data.error || t('admin.permission_denied')));
         }
     } catch (e) {
-        if (!silent) showToast('網路連線異常，請檢查網路。');
+        if (!silent) showToast(t('admin.network_check'));
     }
 }
 
@@ -436,10 +444,10 @@ if (devModeToggle) {
     devModeToggle.addEventListener('change', (e) => {
         if (e.target.checked) {
             localStorage.setItem('developer_mode', 'true');
-            showToast('已開啟開發者模式 (解除頻率限制)');
+            showToast(t('admin.dev_mode_on'));
         } else {
             localStorage.removeItem('developer_mode');
-            showToast('已關閉開發者模式');
+            showToast(t('admin.dev_mode_off'));
         }
     });
 }
@@ -456,9 +464,9 @@ async function saveWhitelistConfig() {
                 autoWhitelistDatesStr: autoWhitelistDates.value
             })
         });
-        showToast('自動白名單設定已儲存');
+        showToast(t('admin.auto_whitelist_saved'));
     } catch(e) {
-        showToast('設定失敗，請檢查網路');
+        showToast(t('admin.setting_network_failed'));
     }
 }
 
@@ -480,7 +488,7 @@ if (saveAiBtn) {
         const mod = aiModel.value.trim();
         const ks = aiKeys.value.trim();
         if (!ep || !mod || !ks) {
-            showToast('請填寫完整資訊');
+            showToast(t('admin.ai_fill_required'));
             return;
         }
         
@@ -504,7 +512,7 @@ if (saveAiBtn) {
         aiKeys.value = '';
         addAiForm.style.display = 'none';
         editingAiIndex = -1;
-        if (saveAiBtn) saveAiBtn.textContent = '儲存並加入矩陣';
+        if (saveAiBtn) saveAiBtn.textContent = t('admin.ai_save_btn');
         
         renderAiModels();
         saveConfig(false);
@@ -518,7 +526,7 @@ if (cancelAiBtn) {
         aiKeys.value = '';
         addAiForm.style.display = 'none';
         editingAiIndex = -1;
-        if (saveAiBtn) saveAiBtn.textContent = '儲存並加入矩陣';
+        if (saveAiBtn) saveAiBtn.textContent = t('admin.ai_save_btn');
     });
 }
 
@@ -528,7 +536,7 @@ if (cancelAiBtn) {
 if (downloadLlmBtn) {
     downloadLlmBtn.addEventListener('click', () => {
         if (currentLlmBlacklist.length === 0) {
-            showToast('目前沒有學習記錄');
+            showToast(t('admin.llm_empty'));
             return;
         }
         const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(currentLlmBlacklist, null, 2));
@@ -537,13 +545,13 @@ if (downloadLlmBtn) {
         dlAnchorElem.setAttribute("download", `llm_blacklist_${new Date().getTime()}.json`);
         dlAnchorElem.click();
         dlAnchorElem.remove();
-        showToast('學習紀錄下載成功');
+        showToast(t('admin.llm_download_success'));
     });
 }
 
 if (clearLlmBtn) {
     clearLlmBtn.addEventListener('click', async () => {
-        if (!confirm('確定要清空所有 AI 學習紀錄嗎？清空後攔截將失效。')) return;
+        if (!confirm(t('admin.llm_clear_confirm'))) return;
         try {
             const res = await fetch(WORKER_API + '/admin/config', {
                 method: 'POST',
@@ -554,10 +562,10 @@ if (clearLlmBtn) {
             if (data.success) {
                 currentLlmBlacklist = [];
                 if (llmCountDisplay) llmCountDisplay.textContent = "0";
-                showToast('已清空學習紀錄');
+                showToast(t('admin.llm_cleared'));
             }
         } catch (e) {
-            showToast('連線失敗');
+            showToast(t('admin.connect_failed'));
         }
     });
 }
@@ -577,11 +585,11 @@ function handleFileUpload(inputElement, configKey) {
             try {
                 const arr = JSON.parse(event.target.result);
                 if (!Array.isArray(arr) || !arr.every(item => typeof item === 'string')) {
-                    showToast('格式錯誤：必須是字串陣列 (例如 ["詞彙1", "詞彙2"])');
+                    showToast(t('admin.upload_format_error'));
                     return;
                 }
 
-                showToast('上傳中...');
+                showToast(t('admin.uploading'));
                 
                 const payload = { admin_key: adminKey };
                 payload[configKey] = arr;
@@ -594,7 +602,7 @@ function handleFileUpload(inputElement, configKey) {
                 
                 const data = await res.json();
                 if (data.success) {
-                    showToast('上傳成功！');
+                    showToast(t('admin.upload_success'));
                     /* Optimistically update UI to bypass KV propagation delay. */
                     if (configKey === 'baseBannedWords' && baseCountDisplay) {
                         baseCountDisplay.textContent = arr.length;
@@ -603,10 +611,10 @@ function handleFileUpload(inputElement, configKey) {
                         privateCountDisplay.textContent = arr.length;
                     }
                 } else {
-                    showToast('上傳失敗：' + (data.error || '權限不足'));
+                    showToast(t('admin.upload_failed') + (data.error || t('admin.permission_denied')));
                 }
             } catch (err) {
-                showToast('讀取失敗或 JSON 格式不合法');
+                showToast(t('admin.json_parse_error'));
             } finally {
                 /* Reset file input to allow selecting the same file again. */
                 inputElement.value = '';
@@ -658,11 +666,11 @@ function renderList(list) {
         
         const delBtn = document.createElement('button');
         delBtn.className = 'ios-btn destructive';
-        delBtn.textContent = '刪除';
+        delBtn.textContent = t('common.delete');
         delBtn.onclick = () => deleteDanmaku(item.id, div);
         const blacklistBtn = document.createElement('button');
         blacklistBtn.className = 'ios-btn';
-        blacklistBtn.title = 'AI 監督學習 (提取並加入黑名單)';
+        blacklistBtn.title = t('admin.ai_learn_btn_title');
         blacklistBtn.style.padding = '0';
         blacklistBtn.style.width = '32px';
         blacklistBtn.style.height = '32px';
@@ -695,7 +703,7 @@ function renderList(list) {
 async function loadDanmaku() {
     if (!adminKey) return;
     
-    danmakuList.innerHTML = '<div class="empty-state">載入中...</div>';
+    danmakuList.innerHTML = `<div class="empty-state">${t('common.loading')}</div>`;
     
     try {
         const res = await fetch(WORKER_API + '/danmaku');
@@ -708,7 +716,7 @@ async function loadDanmaku() {
         totalCount.textContent = list.length;
         
         if (list.length === 0) {
-            danmakuList.innerHTML = '<div class="empty-state">目前沒有任何彈幕</div>';
+            danmakuList.innerHTML = `<div class="empty-state">${t('admin.no_danmaku')}</div>`;
             return;
         }
 
@@ -716,18 +724,21 @@ async function loadDanmaku() {
         
     } catch (e) {
         console.error(e);
-        showToast('載入失敗');
-        danmakuList.innerHTML = '<div class="empty-state">載入失敗，請檢查網路連線或重新整理</div>';
+        showToast(t('admin.load_failed'));
+        danmakuList.innerHTML = `<div class="empty-state">${t('admin.load_failed_detail')}</div>`;
     }
 }
 
 /* Delete specific danmaku item by ID. */
 async function deleteDanmaku(id, element) {
-    if (!confirm('確定要強制刪除此彈幕嗎？')) return;
+    if (!confirm(t('admin.delete_confirm'))) return;
     
-    const originalText = element.querySelector('.ios-btn').textContent;
-    element.querySelector('.ios-btn').textContent = '刪除中...';
-    element.querySelector('.ios-btn').disabled = true;
+    const delBtn = element.querySelector('.ios-btn.destructive');
+    const originalText = delBtn ? delBtn.textContent : t('common.delete');
+    if (delBtn) {
+        delBtn.textContent = t('admin.deleting');
+        delBtn.disabled = true;
+    }
 
     try {
         const res = await fetch(WORKER_API + '/danmaku', {
@@ -737,30 +748,34 @@ async function deleteDanmaku(id, element) {
         });
         
         if (res.ok) {
-            showToast('已刪除');
+            showToast(t('admin.deleted'));
             element.style.opacity = '0';
             setTimeout(() => {
                 element.remove();
                 totalCount.textContent = Math.max(0, parseInt(totalCount.textContent) - 1);
                 if (danmakuList.children.length === 0) {
-                    danmakuList.innerHTML = '<div class="empty-state">目前沒有任何彈幕</div>';
+                    danmakuList.innerHTML = `<div class="empty-state">${t('admin.no_danmaku')}</div>`;
                 }
             }, 300);
         } else {
             const err = await res.json();
             if (res.status === 400 || res.status === 403) {
-                showToast('權限不足或密碼錯誤');
+                showToast(t('admin.auth_error'));
                 setTimeout(showLogin, 1500);
             } else {
-                showToast(err.error || '刪除失敗');
-                element.querySelector('.ios-btn').textContent = originalText;
-                element.querySelector('.ios-btn').disabled = false;
+                showToast(err.error || t('admin.delete_failed'));
+                if (delBtn) {
+                    delBtn.textContent = originalText;
+                    delBtn.disabled = false;
+                }
             }
         }
     } catch (e) {
-        showToast('網路錯誤');
-        element.querySelector('.ios-btn').textContent = originalText;
-        element.querySelector('.ios-btn').disabled = false;
+        showToast(t('admin.network_error'));
+        if (delBtn) {
+            delBtn.textContent = originalText;
+            delBtn.disabled = false;
+        }
     }
 }
 
@@ -893,12 +908,12 @@ if (learnSubmitBtn) {
     learnSubmitBtn.addEventListener('click', async () => {
         const reason = learnReasonInput.value.trim();
         if (!reason) {
-            showToast('請輸入違規原因或指定敏感詞！');
+            showToast(t('admin.ai_learn_reason_required'));
             return;
         }
 
         learnSubmitBtn.disabled = true;
-        learnSubmitBtn.textContent = '學習中...';
+        learnSubmitBtn.textContent = t('admin.ai_learning');
 
         try {
             const res = await fetch(WORKER_API + '/admin/learn', {
@@ -914,18 +929,32 @@ if (learnSubmitBtn) {
 
             const data = await res.json();
             if (res.ok && data.success) {
-                showToast(`已成功加入黑名單！提取詞彙：${data.learned.join(', ')}`);
+                showToast(t('admin.ai_learn_success', data.learned.join(', ')));
                 closeAiLearnModal();
                 await loadConfig();
                 await loadDanmaku();
             } else {
-                showToast('學習失敗：' + (data.error || '不明錯誤'));
+                showToast(t('admin.ai_learn_failed') + (data.error || t('admin.unknown_error')));
             }
         } catch (e) {
-            showToast('連線失敗');
+            showToast(t('admin.connect_failed'));
         } finally {
             learnSubmitBtn.disabled = false;
-            learnSubmitBtn.textContent = '提交';
+            learnSubmitBtn.textContent = t('common.submit');
         }
     });
 }
+
+/* Apply initial translations and listen for global language changes */
+applyTranslations();
+window.addEventListener('sys-lang-change', () => {
+    applyTranslations();
+    renderAiModels();
+    if (Array.isArray(window.currentDanmakuList)) {
+        if (window.currentDanmakuList.length === 0) {
+            danmakuList.innerHTML = `<div class="empty-state">${t('admin.no_danmaku')}</div>`;
+        } else {
+            renderList(window.currentDanmakuList);
+        }
+    }
+});

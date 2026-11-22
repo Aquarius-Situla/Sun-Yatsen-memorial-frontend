@@ -7,53 +7,55 @@
  * 3. All prose is written in English.
  * ============================================================================ */
 
+import { t } from './i18n.js';
+
 export const DEFAULT_MUSIC = {
     src: './main/sanmin/sanmin.mp3',
-    title: '三民主義歌',
-    artist: '孫文'
+    titleKey: 'audio.default_title',
+    artistKey: 'audio.default_artist'
 };
 
 export const SPECIAL_MEMORIAL_DAYS = [
     {
         urlKeyword:  'whampoa',
         dates:       [ { month: 6, date: 16 } ],
-        config:      { src: './events/whampoa/whampoa.mp3', title: '黃埔組曲', artist: '戴季陶' },
-        getBanner:   (year) => `黃埔建軍 ${year - 1924} 週年`,
+        config:      { src: './events/whampoa/whampoa.mp3', titleKey: 'audio.whampoa_title', artistKey: 'audio.whampoa_artist' },
+        getBanner:   (year) => t('calendar.banner_whampoa', year - 1924),
         festivalPage: './events/whampoa/whampoa.html'
     },
     {
         urlKeyword:  'militaries',
         dates:       [ { month: 9, date: 3 } ],
-        config:      { src: './events/militaries/militaries.mp3', title: '三軍軍歌組曲', artist: '何志浩' },
-        getBanner:   (year) => `抗戰勝利 ${year - 1945} 週年`,
+        config:      { src: './events/militaries/militaries.mp3', titleKey: 'audio.militaries_title', artistKey: 'audio.militaries_artist' },
+        getBanner:   (year) => t('calendar.banner_militaries', year - 1945),
         festivalPage: './events/militaries/militaries.html'
     },
     {
         urlKeyword:  'yatsen-passing',
         dates:       [ { month: 3,  date: 12 } ],
-        config:      { src: './events/yatsen/yatsen.mp3', title: '國父紀念歌', artist: '戴季陶' },
-        getBanner:   (year) => `國父逝世 ${year - 1925} 週年`,
+        config:      { src: './events/yatsen/yatsen.mp3', titleKey: 'audio.yatsen_title', artistKey: 'audio.yatsen_artist' },
+        getBanner:   (year) => t('calendar.banner_yatsen_passing', year - 1925),
         festivalPage: './events/yatsen/yatsen-passing.html'
     },
     {
         urlKeyword:  'yatsen-birth',
         dates:       [ { month: 11, date: 12 } ],
-        config:      { src: './events/yatsen/yatsen.mp3', title: '國父紀念歌', artist: '戴季陶' },
-        getBanner:   (year) => `國父誕辰 ${year - 1866} 週年`,
+        config:      { src: './events/yatsen/yatsen.mp3', titleKey: 'audio.yatsen_title', artistKey: 'audio.yatsen_artist' },
+        getBanner:   (year) => t('calendar.banner_yatsen_birth', year - 1866),
         festivalPage: './events/yatsen/yatsen-birth.html'
     },
     {
         urlKeyword:  'xinhai',
         dates:       [ { month: 10, date: 10 } ],
         config:      DEFAULT_MUSIC,
-        getBanner:   (year) => `辛亥革命 ${year - 1911} 週年`,
+        getBanner:   (year) => t('calendar.banner_xinhai', year - 1911),
         festivalPage: './events/xinhai/xinhai.html'
     },
     {
         urlKeyword:  'mayfourth',
         dates:       [ { month: 5, date: 4 } ],
         config:      DEFAULT_MUSIC,
-        getBanner:   (year) => `五四運動 ${year - 1919} 週年`,
+        getBanner:   (year) => t('calendar.banner_mayfourth', year - 1919),
         festivalPage: './events/mayfourth/mayfourth.html'
     }
 ];
@@ -85,9 +87,9 @@ export function setupMediaSession(audioEl, config) {
     if (!('mediaSession' in navigator)) return;
 
     navigator.mediaSession.metadata = new MediaMetadata({
-        title:   config.title,
-        artist:  config.artist,
-        album:   '私立中山紀念堂',
+        title:   t(config.titleKey),
+        artist:  t(config.artistKey),
+        album:   t('audio.album'),
         artwork: [ { src: './main/sanmin/album-cover.png', sizes: '1254x1254', type: 'image/png' } ]
     });
 

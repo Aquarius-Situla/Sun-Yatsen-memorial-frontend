@@ -10,10 +10,8 @@
  * ============================================================================ */
 
 /* ============================================================================
- * Component Imports
+ * Global Reset & Base Document Typography
  * ============================================================================ */
-@import url('./components/desktop-shell.css?v=20260907f');
-@import url('./components/activity-indicator.css?v=20260907f');
 
 *,
 *::before,

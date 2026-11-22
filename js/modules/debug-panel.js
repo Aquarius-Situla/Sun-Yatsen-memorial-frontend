@@ -7,6 +7,8 @@
  * 3. All prose is written in English.
  * ============================================================================ */
 
+import { t } from './i18n.js';
+
 /* ============================================================================
  * Diagnostic Data Collector & Formatter
  * ============================================================================ */
@@ -112,10 +114,10 @@ export function showDiagnosticModal() {
 
     modal.innerHTML = `
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid rgba(255, 255, 255, 0.15);">
-            <strong style="color: #ffffff; font-size: 13px;">🔍 系統即時視口診斷面板</strong>
+            <strong style="color: #ffffff; font-size: 13px;">${t('diag.title')}</strong>
             <div>
-                <button id="sys-diag-copy-btn" style="background: #0a84ff; color: #fff; border: none; border-radius: 6px; padding: 4px 10px; font-size: 11px; margin-right: 6px; cursor: pointer;">複製數據</button>
-                <button id="sys-diag-close-btn" style="background: rgba(255,255,255,0.15); color: #fff; border: none; border-radius: 6px; padding: 4px 10px; font-size: 11px; cursor: pointer;">關閉</button>
+                <button id="sys-diag-copy-btn" style="background: #0a84ff; color: #fff; border: none; border-radius: 6px; padding: 4px 10px; font-size: 11px; margin-right: 6px; cursor: pointer;">${t('diag.copy_btn')}</button>
+                <button id="sys-diag-close-btn" style="background: rgba(255,255,255,0.15); color: #fff; border: none; border-radius: 6px; padding: 4px 10px; font-size: 11px; cursor: pointer;">${t('diag.close_btn')}</button>
             </div>
         </div>
         <pre style="margin: 0; white-space: pre-wrap; word-break: break-all; flex: 1; color: #e5e5ea;">${JSON.stringify(data, null, 2)}</pre>
@@ -131,10 +133,10 @@ export function showDiagnosticModal() {
         const text = JSON.stringify(data, null, 2);
         if (navigator.clipboard && navigator.clipboard.writeText) {
             navigator.clipboard.writeText(text).then(function() {
-                alert('診斷數據已複製到剪貼簿！');
+                alert(t('diag.copied_alert'));
             });
         } else {
-            prompt('請手動全選複製以下診斷資訊：', text);
+            prompt(t('diag.manual_copy_prompt'), text);
         }
     };
 }

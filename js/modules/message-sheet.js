@@ -11,6 +11,8 @@ import { showToast, formatError } from './ui.js';
 import { generateBrowserFingerprint } from './attendance.js';
 import { showCaptchaModal } from './captcha.js';
 import { createDanmaku, getDanmakuState } from './danmaku.js';
+import { t } from './i18n.js';
+import { getPageSignal } from '../core/lifecycle.js';
 
 let bannedWordsList = [];
 let consecutiveViolations = 0;
@@ -74,7 +76,7 @@ export function renderHistoryPopover(historyListEl, apiUrl) {
     historyListEl.innerHTML = '';
 
     if (mySentMessages.length === 0) {
-        historyListEl.innerHTML = '<div class="empty-history">暫無留言紀錄</div>';
+        historyListEl.innerHTML = `<div class="empty-history">${t('message.empty_history')}</div>`;
         return;
     }
 
@@ -89,10 +91,10 @@ export function renderHistoryPopover(historyListEl, apiUrl) {
         const retractBtn = document.createElement('button');
         retractBtn.className = 'retract-btn';
         retractBtn.innerHTML = '×';
-        retractBtn.title = '撤回留言';
+        retractBtn.title = t('message.retract_title');
         retractBtn.addEventListener('click', async (e) => {
             e.stopPropagation();
-            if (confirm('確定要撤回這則留言嗎？')) {
+            if (confirm(t('message.retract_confirm'))) {
                 await retractMessage(msg.id, apiUrl, historyListEl);
             }
         });
@@ -116,12 +118,12 @@ export async function retractMessage(id, apiUrl, historyListEl) {
             mySentMessages = mySentMessages.filter(m => m.id !== id);
             localStorage.setItem('mySentMessages', JSON.stringify(mySentMessages));
             renderHistoryPopover(historyListEl, apiUrl);
-            showToast('留言已撤回', 'system');
+            showToast(t('message.retracted'), 'system');
         } else {
-            showToast('撤回失敗或該留言已被移除', 'error');
+            showToast(t('message.retract_failed'), 'error');
         }
     } catch (err) {
-        showToast(formatError(err, '網路異常，無法撤回'), 'error');
+        showToast(formatError(err, t('message.retract_network_error')), 'error');
     }
 }
 
@@ -227,6 +229,13 @@ export function setupMessageSheet(elements, apiUrl) {
         });
     }
 
+    /* Re-render history popover dynamically when global language changes */
+    window.addEventListener('sys-lang-change', () => {
+        if (historyList) {
+            renderHistoryPopover(historyList, apiUrl);
+        }
+    }, { signal: getPageSignal() });
+
     function handleViolation(msg) {
         showToast(msg, 'error');
         consecutiveViolations++;
@@ -235,7 +244,7 @@ export function setupMessageSheet(elements, apiUrl) {
                 if (messageModal) messageModal.classList.remove('active');
                 showCaptchaModal(() => {
                     consecutiveViolations = 0;
-                    showToast('人類驗證成功', 'success');
+                    showToast(t('message.captcha_verified'), 'success');
                 });
             }, 300);
         }
@@ -250,19 +259,19 @@ export function setupMessageSheet(elements, apiUrl) {
             const text = messageInput.value.trim();
 
             if (!text) {
-                showToast('留言不能為空', 'error');
+                showToast(t('message.empty_error'), 'error');
                 return;
             }
             if (text.length > 50) {
-                showToast('留言限 50 字內', 'error');
+                showToast(t('message.too_long_error'), 'error');
                 return;
             }
             if (containsBannedWords(text)) {
-                handleViolation('請勿包含敏感詞彙');
+                handleViolation(t('message.banned_words_error'));
                 return;
             }
             if (isSpam(text)) {
-                handleViolation('請勿發送無意義的重複內容');
+                handleViolation(t('message.spam_error'));
                 return;
             }
 
@@ -283,7 +292,7 @@ export function setupMessageSheet(elements, apiUrl) {
                 }, 1000);
             }
 
-            showToast('傳送中...', 'info');
+            showToast(t('message.sending'), 'info');
 
             try {
                 const fingerprint = await generateBrowserFingerprint();
@@ -295,7 +304,7 @@ export function setupMessageSheet(elements, apiUrl) {
 
                 if (response.ok) {
                     const data = await response.json();
-                    showToast('發送成功！', 'success');
+                    showToast(t('message.sent_success'), 'success');
                     messageInput.value = '';
                     if (charCount) charCount.textContent = '0';
 
@@ -310,12 +319,12 @@ export function setupMessageSheet(elements, apiUrl) {
                     }
                 } else {
                     const err = await response.json().catch(() => ({}));
-                    showToast(err.error || '發送失敗，請稍候再試。', 'error');
+                    showToast(err.error || t('message.send_failed'), 'error');
 
                     if (err.error && err.error.includes('ratelimit')) {
                         if (timer) clearInterval(timer);
                         showCaptchaModal(() => {
-                            showToast('驗證通過', 'success');
+                            showToast(t('message.captcha_passed'), 'success');
                         });
                     } else {
                         if (timer) clearInterval(timer);
@@ -324,7 +333,7 @@ export function setupMessageSheet(elements, apiUrl) {
                     }
                 }
             } catch (err) {
-                showToast(formatError(err, '網路連線異常，請檢查網路'), 'error');
+                showToast(formatError(err, t('message.send_network_error')), 'error');
                 if (timer) clearInterval(timer);
                 messageCooldown = false;
                 submitMessageBtn.disabled = false;

@@ -8,7 +8,9 @@
  * ============================================================================ */
 
 import { SPECIAL_MEMORIAL_DAYS } from './audio-player.js';
-import { isMobileLayout } from './device-detect.js?v=20260907f';
+import { isMobileLayout } from './device-detect.js';
+import { t } from './i18n.js';
+import { getPageSignal } from '../core/lifecycle.js';
 
 /* ============================================================================
  * Republic of China Calendar Formatting
@@ -21,54 +23,47 @@ export function displayMinguoDate(targetEl) {
     const minguoYear = now.getFullYear() - 1911;
     const month      = now.getMonth() + 1;
     const date       = now.getDate();
-    const days       = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
-    const dayOfWeek  = days[now.getDay()];
+    const dayOfWeek  = t(`calendar.day_${now.getDay()}`);
 
-    targetEl.innerText = `中華民國 ${minguoYear} 年 ${month} 月 ${date} 日 (${dayOfWeek})`;
+    targetEl.removeAttribute('data-i18n');
+    targetEl.innerText = t('calendar.minguo_date', minguoYear, month, date, dayOfWeek);
 }
 
 /* ============================================================================
  * Festival Banner & Mode Resolution
  * ============================================================================ */
-export function initFestivalBanner(navBannerEl, onFestivalTrigger) {
-    if (!navBannerEl) return;
-
+function findActiveFestival() {
     const url          = window.location.href.toLowerCase();
     const now          = new Date();
     const currentMonth = now.getMonth() + 1;
     const currentDate  = now.getDate();
     const currentYear  = now.getFullYear();
 
-    let bannerText   = '';
-    let isFestival   = false;
-    let festivalPage = '';
-
-    /* Highest Priority: URL Routing */
     for (const item of SPECIAL_MEMORIAL_DAYS) {
         if (url.includes(item.urlKeyword.toLowerCase())) {
-            bannerText   = item.getBanner(currentYear, item.dates[0]);
-            isFestival   = true;
-            festivalPage = item.festivalPage || '';
-            break;
+            return { item, year: currentYear };
         }
     }
 
-    /* Secondary Priority: Current Date Matching */
-    if (!isFestival) {
-        for (const item of SPECIAL_MEMORIAL_DAYS) {
-            for (const d of item.dates) {
-                if (d.month === currentMonth && d.date === currentDate) {
-                    bannerText   = item.getBanner(currentYear, d);
-                    isFestival   = true;
-                    festivalPage = item.festivalPage || '';
-                    break;
-                }
+    for (const item of SPECIAL_MEMORIAL_DAYS) {
+        for (const d of item.dates) {
+            if (d.month === currentMonth && d.date === currentDate) {
+                return { item, year: currentYear };
             }
-            if (isFestival) break;
         }
     }
 
-    if (isFestival && bannerText) {
+    return null;
+}
+
+export function initFestivalBanner(navBannerEl, onFestivalTrigger) {
+    if (!navBannerEl) return;
+
+    const activeFestival = findActiveFestival();
+    const bannerText     = activeFestival ? activeFestival.item.getBanner(activeFestival.year) : '';
+    const festivalPage   = activeFestival ? (activeFestival.item.festivalPage || '') : '';
+
+    if (activeFestival && bannerText) {
         navBannerEl.innerText = bannerText;
         document.body.classList.add('has-festival');
 
@@ -77,7 +72,7 @@ export function initFestivalBanner(navBannerEl, onFestivalTrigger) {
             navBannerEl.style.cursor = 'pointer';
             navBannerEl.setAttribute('role',       'link');
             navBannerEl.setAttribute('tabindex',   '0');
-            navBannerEl.setAttribute('aria-label', `${bannerText}——點擊了解更多`);
+            navBannerEl.setAttribute('aria-label', t('calendar.festival_aria', bannerText));
             navBannerEl.setAttribute('data-href', festivalPage);
             navBannerEl.addEventListener('click',   (e) => {
                 if (isMobileLayout() && typeof window.__triggerMobileNav === 'function') {
@@ -106,6 +101,18 @@ export function initFestivalBanner(navBannerEl, onFestivalTrigger) {
         navBannerEl.innerText = '';
         document.body.classList.remove('has-festival');
     }
+
+    /* Live sync Minguo date and festival banner on language switch */
+    window.addEventListener('sys-lang-change', () => {
+        displayMinguoDate();
+        if (activeFestival) {
+            const updatedBanner = activeFestival.item.getBanner(activeFestival.year);
+            navBannerEl.innerText = updatedBanner;
+            if (festivalPage) {
+                navBannerEl.setAttribute('aria-label', t('calendar.festival_aria', updatedBanner));
+            }
+        }
+    }, { signal: getPageSignal() });
 
     /* Developer testing hook via URL hash */
     if (window.location.hash.includes('celebration') && typeof onFestivalTrigger === 'function') {

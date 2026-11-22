@@ -7,6 +7,8 @@
  * 3. All prose is written in English.
  * ============================================================================ */
 
+import { getPageSignal, onPageUnmount } from '../core/lifecycle.js';
+
 /* ============================================================================
  * Frame Lighting Calculations
  * ============================================================================
@@ -41,6 +43,7 @@ export function applyFrameLighting(woodFrame, rotX, rotY) {
  * ============================================================================ */
 export function initDesktopParallax(woodFrame) {
     if (!woodFrame || !window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+    const signal = getPageSignal();
 
     document.addEventListener('mousemove', (e) => {
         const xAxis    = (window.innerWidth  / 2 - e.pageX) / (window.innerWidth  / 2);
@@ -51,12 +54,12 @@ export function initDesktopParallax(woodFrame) {
 
         woodFrame.style.transform = `translateZ(0) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
         applyFrameLighting(woodFrame, rotateX, rotateY);
-    });
+    }, { signal });
 
     document.addEventListener('mouseleave', () => {
         woodFrame.style.transform = 'translateZ(0) rotateX(0deg) rotateY(0deg)';
         applyFrameLighting(woodFrame, 0, 0);
-    });
+    }, { signal });
 }
 
 /* ============================================================================
@@ -91,12 +94,14 @@ export function initGyroscopeLighting(woodFrame) {
         targetRotY = Math.max(-max, Math.min(max, (e.gamma - baseGamma) * 0.25));
     }
 
+    const signal = getPageSignal();
+
     function startGyroscope() {
-        if (isActive) return;
+        if (isActive || signal.aborted) return;
         isActive  = true;
         baseBeta  = null;
         baseGamma = null;
-        window.addEventListener('deviceorientation', handleOrientation, { passive: true });
+        window.addEventListener('deviceorientation', handleOrientation, { passive: true, signal });
         smoothLoop();
     }
 
@@ -111,7 +116,10 @@ export function initGyroscopeLighting(woodFrame) {
 
     document.addEventListener('visibilitychange', () => {
         document.hidden ? stopGyroscope() : startGyroscope();
-    });
+    }, { signal });
 
-    setTimeout(startGyroscope, 600);
+    onPageUnmount(stopGyroscope);
+
+    const startTimer = setTimeout(startGyroscope, 600);
+    onPageUnmount(() => clearTimeout(startTimer));
 }

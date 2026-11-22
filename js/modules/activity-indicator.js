@@ -7,7 +7,7 @@
  * 3. All prose is written in English.
  * ============================================================================ */
 
-import { getCurrentLang } from './i18n.js?v=20260906z';
+import { t } from './i18n.js';
 
 /* ============================================================================
  * Section 1: Factory & Mounting Methods
@@ -15,13 +15,11 @@ import { getCurrentLang } from './i18n.js?v=20260906z';
 
 /**
  * Creates an authentic 12-blade Apple daisy spinner overlay element
- * @param {string|null} customText - Optional label text, defaults to localized "載入中…" / "载入中…"
+ * @param {string|null} customText - Optional label text, defaults to localized loading string
  * @returns {HTMLElement} The overlay element
  */
 export function createActivityIndicator(customText = null) {
-    const isTraditional = getCurrentLang() === 'tc';
-    const defaultText = isTraditional ? '載入中…' : '载入中…';
-    const text = customText !== null ? customText : defaultText;
+    const text = customText !== null ? customText : t('common.loading_ellipsis');
 
     const overlay = document.createElement('div');
     overlay.className = 'sys-activity-overlay';

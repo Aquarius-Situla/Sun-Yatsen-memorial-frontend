@@ -11,7 +11,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title id="page-title">設定 - 私立中山紀念堂</title>
+    <title id="page-title" data-i18n="settings.page_title">設定 - 私立中山紀念堂</title>
 
     <script>
         /* Immediate device fingerprinting to eliminate layout flash */
@@ -49,30 +49,32 @@
     <!-- Critical inline CSS: eliminates white flash and 300ms expansion during iOS PWA launch -->
     <style>html,body{background-color:#111111;min-height:100.5vh;min-height:calc(100lvh + 1px);}@media(prefers-color-scheme:light){html,body{background-color:#f5f0e8;}}</style>
 
-    <link rel="stylesheet" href="../../css/variables.css?v=20260907f">
-    <link rel="stylesheet" href="../../css/base.css?v=20260907f">
-    <link rel="stylesheet" href="../../css/components/tab-bar.css?v=20260907f">
-    <link id="sys-style-subpage" rel="stylesheet" href="../../css/components/subpage.css?v=20260907f">
-    <link rel="stylesheet" href="../../css/components/orientation-guard.css?v=20260907f">
+    <link id="sys-style-variables" rel="stylesheet" href="../../css/variables.css">
+    <link id="sys-style-base" rel="stylesheet" href="../../css/base.css">
+    <link rel="stylesheet" href="../../css/components/tab-bar.css">
+    <link id="sys-style-subpage" rel="stylesheet" href="../../css/components/subpage.css">
+    <link rel="stylesheet" href="../../css/components/orientation-guard.css">
+    <link id="sys-style-desktop-shell" rel="stylesheet" href="../../css/components/desktop-shell.css">
+    <link id="sys-style-activity" rel="stylesheet" href="../../css/components/activity-indicator.css">
 </head>
-<body class="page-settings-menu">
+<body class="page-settings-menu" data-page="settings">
 
     <!-- Apple Native Frosted Glass Top Navigation Bar (Mobile Viewports) -->
     <header class="apple-top-nav">
-        <h1 class="nav-title" id="top-nav-title">設定</h1>
+        <h1 class="nav-title" id="top-nav-title" data-i18n="settings.top_title">設定</h1>
     </header>
 
     <!-- iOS Inset Grouped Settings Container -->
     <div class="ios-group-container">
         <!-- Section 1: System Preferences -->
-        <div class="ios-section-header" id="sec-pref-header">偏好設定 (PREFERENCES)</div>
+        <div class="ios-section-header" id="sec-pref-header" data-i18n="settings.sec_pref">偏好設定</div>
         <div class="ios-card">
             <a class="ios-row has-badge" id="lang-toggle-row" href="../library/language.html">
                 <div class="ios-row-title">
                     <div class="ios-badge badge-gray">
                         <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
                     </div>
-                    <span id="label-lang">全域語言 (Language)</span>
+                    <span id="label-lang" data-i18n="settings.label_lang">全域語言</span>
                 </div>
                 <div class="ios-row-accessory">
                     <span class="ios-row-value" id="current-lang-text">正體中文</span>
@@ -82,17 +84,17 @@
         </div>
 
         <!-- Section 2: About & Legal -->
-        <div class="ios-section-header" id="sec-about-header">關於與聲明 (ABOUT &amp; LEGAL)</div>
+        <div class="ios-section-header" id="sec-about-header" data-i18n="settings.sec_about">關於與聲明</div>
         <div class="ios-card">
             <a class="ios-row has-badge" href="../about/about.html">
                 <div class="ios-row-title">
                     <div class="ios-badge badge-purple">
                         <svg viewBox="0 0 24 24"><path d="M12 2L2 7v3h20V7L12 2zm8 9h-2v7h2v-7zm-6 0h-2v7h2v-7zm-6 0H6v7h2v-7zm-5 9v2h18v-2H3z"/></svg>
                     </div>
-                    <span id="label-about">關於紀念館與聲明</span>
+                    <span id="label-about" data-i18n="settings.label_about">關於紀念館與聲明</span>
                 </div>
                 <div class="ios-row-accessory">
-                    <span class="ios-row-value" id="val-about">館舍與法規</span>
+                    <span class="ios-row-value" id="val-about" data-i18n="settings.val_about">館舍與法規</span>
                     <svg class="ios-chevron" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
                 </div>
             </a>
@@ -101,10 +103,10 @@
                     <div class="ios-badge badge-red">
                         <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
                     </div>
-                    <span id="label-thanks">特別鳴謝名單</span>
+                    <span id="label-thanks" data-i18n="settings.label_thanks">特別鳴謝名單</span>
                 </div>
                 <div class="ios-row-accessory">
-                    <span class="ios-row-value" id="val-thanks">開源與貢獻</span>
+                    <span class="ios-row-value" id="val-thanks" data-i18n="settings.val_thanks">開源與貢獻</span>
                     <svg class="ios-chevron" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
                 </div>
             </a>
@@ -113,7 +115,7 @@
                     <div class="ios-badge badge-blue">
                         <svg viewBox="0 0 24 24"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/></svg>
                     </div>
-                    <span id="label-official">國父紀念館官方網站</span>
+                    <span id="label-official" data-i18n="settings.label_official">國父紀念館官方網站</span>
                 </div>
                 <div class="ios-row-accessory">
                     <span class="ios-row-value">yatsen.gov.tw</span>
@@ -123,14 +125,14 @@
         </div>
 
         <!-- Section 3: System Information -->
-        <div class="ios-section-header" id="sec-sys-header">系統資訊 (SYSTEM INFO)</div>
+        <div class="ios-section-header" id="sec-sys-header" data-i18n="settings.sec_sys">系統資訊</div>
         <div class="ios-card">
             <div class="ios-row has-badge">
                 <div class="ios-row-title">
                     <div class="ios-badge badge-dark">
                         <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
                     </div>
-                    <span id="label-version">應用版本</span>
+                    <span id="label-version" data-i18n="settings.label_version">應用版本</span>
                 </div>
                 <div class="ios-row-accessory">
                     <span class="ios-row-value">v2.0.25 (PWA)</span>
@@ -141,10 +143,10 @@
                     <div class="ios-badge badge-teal">
                         <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
                     </div>
-                    <span id="label-archive-system">典藏系統</span>
+                    <span id="label-archive-system" data-i18n="settings.label_archive_system">典藏系統</span>
                 </div>
                 <div class="ios-row-accessory">
-                    <span class="ios-row-value" id="val-archive-system">私立中山紀念堂</span>
+                    <span class="ios-row-value" id="val-archive-system" data-i18n="settings.val_archive_system">私立中山紀念堂</span>
                 </div>
             </div>
         </div>
@@ -178,136 +180,6 @@
         </a>
     </nav>
 
-    <script type="module">
-        /* ====================================================================
-         * Settings Module Initialization & Dynamic Language Toggle
-         * ==================================================================== */
-        import { getCurrentLang, getLanguageMode, setGlobalLang, syncTabBarLabels, t } from '../../js/modules/i18n.js?v=20260907f';
-        import { syncStandaloneTabBar } from '../../js/modules/tab-bar.js?v=20260907f';
-        import { initIOSNavTransition } from '../../js/modules/ios-nav-transition.js?v=20260907f';
-        import { initDesktopShell } from '../../js/modules/desktop-shell.js?v=20260907f';
-        import { initDeviceLayout, initOrientationGuard } from '../../js/modules/device-detect.js?v=20260907f';
-
-        const i18nStrings = {
-            tc: {
-                pageTitle: '設定 - 私立中山紀念堂',
-                topNavTitle: '設定',
-                secPrefHeader: '偏好設定 (PREFERENCES)',
-                secAboutHeader: '關於與聲明 (ABOUT & LEGAL)',
-                secSysHeader: '系統資訊 (SYSTEM INFO)',
-                labelLang: '全域語言 (Language)',
-                langText: '正體中文',
-                labelAbout: '關於紀念館與聲明',
-                valAbout: '館舍與法規',
-                labelThanks: '特別鳴謝名單',
-                valThanks: '開源與貢獻',
-                labelOfficial: '國父紀念館官方網站',
-                labelVersion: '應用版本',
-                labelArchiveSystem: '典藏系統',
-                valArchiveSystem: '私立中山紀念堂',
-                toggleBtn: '切换至简化字'
-            },
-            sc: {
-                pageTitle: '设置 - 私立中山纪念堂',
-                topNavTitle: '设置',
-                secPrefHeader: '偏好设置 (PREFERENCES)',
-                secAboutHeader: '关于与声明 (ABOUT & LEGAL)',
-                secSysHeader: '系统信息 (SYSTEM INFO)',
-                labelLang: '全局语言 (Language)',
-                langText: '简体中文',
-                labelAbout: '关于纪念馆与声明',
-                valAbout: '馆舍与法规',
-                labelThanks: '特别鸣谢名单',
-                valThanks: '开源与贡献',
-                labelOfficial: '国父纪念馆官方网站',
-                labelVersion: '应用版本',
-                labelArchiveSystem: '典藏系统',
-                valArchiveSystem: '私立中山纪念堂',
-                toggleBtn: '切換至正體字'
-            }
-        };
-
-        function updateTexts(lang) {
-            const strings = i18nStrings[lang] || i18nStrings.tc;
-            document.title = strings.pageTitle;
-
-            const topNavTitle = document.getElementById('top-nav-title');
-            if (topNavTitle) topNavTitle.textContent = strings.topNavTitle;
-
-            const secPrefHeader = document.getElementById('sec-pref-header');
-            if (secPrefHeader) secPrefHeader.textContent = strings.secPrefHeader;
-
-            const secAboutHeader = document.getElementById('sec-about-header');
-            if (secAboutHeader) secAboutHeader.textContent = strings.secAboutHeader;
-
-            const secSysHeader = document.getElementById('sec-sys-header');
-            if (secSysHeader) secSysHeader.textContent = strings.secSysHeader;
-
-            const labelLang = document.getElementById('label-lang');
-            if (labelLang) labelLang.textContent = strings.labelLang;
-
-            const currentLangText = document.getElementById('current-lang-text');
-            if (currentLangText) {
-                const mode = getLanguageMode();
-                if (mode === 'auto') {
-                    currentLangText.textContent = (lang === 'tc') ? t('settings_val_lang_auto_tc') : t('settings_val_lang_auto_sc');
-                } else {
-                    currentLangText.textContent = strings.langText;
-                }
-            }
-
-            const labelAbout = document.getElementById('label-about');
-            if (labelAbout) labelAbout.textContent = strings.labelAbout;
-
-            const valAbout = document.getElementById('val-about');
-            if (valAbout) valAbout.textContent = strings.valAbout;
-
-            const labelThanks = document.getElementById('label-thanks');
-            if (labelThanks) labelThanks.textContent = strings.labelThanks;
-
-            const valThanks = document.getElementById('val-thanks');
-            if (valThanks) valThanks.textContent = strings.valThanks;
-
-            const labelOfficial = document.getElementById('label-official');
-            if (labelOfficial) labelOfficial.textContent = strings.labelOfficial;
-
-            const labelVersion = document.getElementById('label-version');
-            if (labelVersion) labelVersion.textContent = strings.labelVersion;
-
-            const labelArchiveSystem = document.getElementById('label-archive-system');
-            if (labelArchiveSystem) labelArchiveSystem.textContent = strings.labelArchiveSystem;
-
-            const valArchiveSystem = document.getElementById('val-archive-system');
-            if (valArchiveSystem) valArchiveSystem.textContent = strings.valArchiveSystem;
-
-            const langBtn = document.getElementById('lang-btn');
-            if (langBtn) langBtn.textContent = strings.toggleBtn;
-
-            syncTabBarLabels();
-        }
-
-        const currentLang = getCurrentLang();
-        updateTexts(currentLang);
-        syncStandaloneTabBar();
-        initIOSNavTransition();
-        initDeviceLayout();
-        initOrientationGuard();
-        initDesktopShell({ activeTab: 'settings', basePath: '../../' });
-
-        const langBtn = document.getElementById('lang-btn');
-        if (langBtn) {
-            langBtn.addEventListener('click', () => {
-                const nextLang = getCurrentLang() === 'tc' ? 'sc' : 'tc';
-                setGlobalLang(nextLang);
-                updateTexts(nextLang);
-            });
-        }
-
-        window.addEventListener('sys-lang-change', (e) => {
-            if (e.detail && e.detail.lang) {
-                updateTexts(e.detail.lang);
-            }
-        });
-    </script>
+    <script type="module" src="../../js/boot.js"></script>
 </body>
 </html>

@@ -1,0 +1,113 @@
+<!-- ==========================================================================
+ * Private Sun Yat-sen Memorial Hall — Biography & Theories Detail (biography/detail.html)
+ * ==========================================================================
+ * COMMENTING STANDARDS
+ * 1. Block comments only. Use HTML comments for DOM and /* */ for inline scripts.
+ * 2. Section dividers use the === banner format.
+ * 3. All prose is written in English.
+ * ========================================================================== -->
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title id="page-title" data-i18n="biography.detail_page_title">傳記詳情 - 私立中山紀念堂</title>
+
+    <script>
+        /* Immediate device fingerprinting to eliminate layout flash */
+        (function() {
+            var ua = navigator.userAgent || '';
+            var platform = navigator.platform || '';
+            var isIPad = /iPad/i.test(ua) || /iPad/i.test(platform) || ((platform === 'MacIntel' || ua.indexOf('Macintosh') !== -1) && navigator.maxTouchPoints > 1);
+            var isIPhone = /iPhone|iPod/i.test(ua) || platform === 'iPhone' || platform === 'iPod';
+            var isAndroidMobile = /Android.*Mobile/i.test(ua);
+            var isAndroidTablet = /Android(?!.*Mobile)/i.test(ua);
+            var isPhone = isIPhone || isAndroidMobile || (navigator.maxTouchPoints > 0 && Math.min(window.screen.width, window.screen.height) <= 480);
+            var isTablet = isIPad || isAndroidTablet;
+            var isMobile = isPhone || isTablet || window.innerWidth <= 768;
+            var docEl = document.documentElement;
+            if (isMobile) {
+                docEl.classList.add('device-mobile');
+                if (isTablet) docEl.classList.add('device-tablet');
+                if (isPhone) docEl.classList.add('device-phone');
+                if (isIPad) docEl.classList.add('device-ipad');
+                if (isIPhone) docEl.classList.add('device-iphone');
+            } else {
+                docEl.classList.add('device-desktop');
+            }
+        })();
+    </script>
+    <link rel="icon" href="../../main/favicon/favicon.svg" type="image/svg+xml">
+    <link rel="alternate icon" href="../../main/favicon/favicon.ico" type="image/x-icon" sizes="any">
+
+    <link rel="manifest" href="../../webapp/manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="國父紀念堂">
+
+    <link rel="preload" href="../../js/zero-md.min.js" as="script">
+    <link rel="preload" href="../../js/chart.min.js" as="script">
+    <script type="module" src="../../js/zero-md.min.js"></script>
+    <script src="../../js/chart.min.js"></script>
+    <!-- Critical inline CSS: eliminates white flash during iOS PWA page transitions -->
+    <style>html,body{background-color:#111111;min-height:100.5vh;min-height:calc(100lvh + 1px);}@media(prefers-color-scheme:light){html,body{background-color:#f5f0e8;}}</style>
+
+    <link id="sys-style-variables" rel="stylesheet" href="../../css/variables.css">
+    <link id="sys-style-base" rel="stylesheet" href="../../css/base.css">
+    <link rel="stylesheet" href="../../css/components/tab-bar.css">
+    <link id="sys-style-subpage" rel="stylesheet" href="../../css/components/subpage.css">
+    <link rel="stylesheet" href="../../css/components/orientation-guard.css">
+    <link id="sys-style-desktop-shell" rel="stylesheet" href="../../css/components/desktop-shell.css">
+    <link id="sys-style-activity" rel="stylesheet" href="../../css/components/activity-indicator.css">
+</head>
+<body class="is-subpage" data-page="biography-detail">
+
+    <!-- Apple Native Frosted Glass Top Navigation Bar (Mobile Viewports) -->
+    <header class="apple-top-nav">
+        <a href="biography.html" class="nav-back-link" id="nav-back-link" data-i18n-aria-label="nav.aria_back_biography" aria-label="返回國父生平">
+            <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+            <span id="nav-back-text" data-i18n="nav.back_biography">國父生平</span>
+        </a>
+        <h1 class="nav-title" id="top-nav-title" data-i18n="biography.tab_biography">生平傳記</h1>
+    </header>
+
+    <!-- Desktop Fallback Navigation Links -->
+    <a href="biography.html" class="top-back-btn" data-i18n-aria-label="nav.aria_back_biography" aria-label="返回國父生平">
+        <svg class="icon-ios" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M15 19l-7-7 7-7" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <svg class="icon-macos" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M14 17l-5-5 5-5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span data-i18n="nav.back_biography">國父生平</span>
+    </a>
+
+    <div class="markdown-container active" id="md-section">
+        <zero-md id="md-viewer">
+            <template>
+                <link rel="stylesheet" href="../../css/github-markdown-dark.css">
+                <style>
+                    .markdown-body { background-color: transparent !important; }
+                </style>
+            </template>
+        </zero-md>
+    </div>
+
+    <div class="charts-container" id="charts-section" style="display: none;">
+        <div class="chart-box">
+            <div class="chart-title" id="chart1-title" data-i18n="biography.chart1_title">革命歷程影響力走勢</div>
+            <canvas id="influenceChart"></canvas>
+        </div>
+        <div class="chart-box">
+            <div class="chart-title" id="chart2-title" data-i18n="biography.chart2_title">三民主義核心結構</div>
+            <canvas id="sanminChart"></canvas>
+            <div style="text-align: center; margin-top: 15px;">
+                <button id="show-all-btn" class="show-all-btn" data-i18n="biography.show_all">顯示全部</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="../../js/boot.js"></script>
+</body>
+</html>

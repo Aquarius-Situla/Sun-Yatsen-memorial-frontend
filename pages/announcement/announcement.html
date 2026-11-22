@@ -11,7 +11,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title id="page-title">公告 - 私立中山紀念堂</title>
+    <title id="page-title" data-i18n="announcement.page_title">公告 - 私立中山紀念堂</title>
 
     <script>
         /* Immediate device fingerprinting to eliminate layout flash */
@@ -49,33 +49,35 @@
     <!-- Critical inline CSS: eliminates white flash during iOS PWA page transitions -->
     <style>html,body{background-color:#111111;min-height:100.5vh;min-height:calc(100lvh + 1px);}@media(prefers-color-scheme:light){html,body{background-color:#f5f0e8;}}</style>
 
-    <link rel="stylesheet" href="../../css/variables.css?v=20260907f">
-    <link rel="stylesheet" href="../../css/base.css?v=20260907f">
-    <link rel="stylesheet" href="../../css/components/tab-bar.css?v=20260907f">
-    <link id="sys-style-subpage" rel="stylesheet" href="../../css/components/subpage.css?v=20260907f">
-    <link rel="stylesheet" href="../../css/components/orientation-guard.css?v=20260907f">
+    <link id="sys-style-variables" rel="stylesheet" href="../../css/variables.css">
+    <link id="sys-style-base" rel="stylesheet" href="../../css/base.css">
+    <link rel="stylesheet" href="../../css/components/tab-bar.css">
+    <link id="sys-style-subpage" rel="stylesheet" href="../../css/components/subpage.css">
+    <link rel="stylesheet" href="../../css/components/orientation-guard.css">
+    <link id="sys-style-desktop-shell" rel="stylesheet" href="../../css/components/desktop-shell.css">
+    <link id="sys-style-activity" rel="stylesheet" href="../../css/components/activity-indicator.css">
 </head>
-<body class="page-announcement-menu">
+<body class="page-announcement-menu" data-page="announcement">
 
     <!-- Apple Native Frosted Glass Top Navigation Bar (Mobile Viewports) -->
     <header class="apple-top-nav">
-        <h1 class="nav-title" id="top-nav-title">公告</h1>
+        <h1 class="nav-title" id="top-nav-title" data-i18n="announcement.top_title">公告</h1>
     </header>
 
-    <!-- iOS Inset Grouped Settings Container (Image 3 Specification) -->
+    <!-- iOS Inset Grouped Settings Container -->
     <div class="ios-group-container">
         <!-- Section 1: Announcements -->
-        <div class="ios-section-header" id="sec-announcements">堂務公告 (ANNOUNCEMENTS)</div>
+        <div class="ios-section-header" id="sec-announcements" data-i18n="announcement.sec_announcements">堂務公告</div>
         <div class="ios-card">
             <a class="ios-row has-badge" href="detail.html?item=status">
                 <div class="ios-row-title">
                     <div class="ios-badge badge-green">
                         <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
                     </div>
-                    <span id="label-status">網站狀態</span>
+                    <span id="label-status" data-i18n="announcement.label_status">網站狀態</span>
                 </div>
                 <div class="ios-row-accessory">
-                    <span class="ios-row-value" id="val-status">運行正常</span>
+                    <span class="ios-row-value" id="val-status" data-i18n="announcement.val_status">運行正常</span>
                     <svg class="ios-chevron" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
                 </div>
             </a>
@@ -84,10 +86,10 @@
                     <div class="ios-badge badge-orange">
                         <svg viewBox="0 0 24 24"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10z"/></svg>
                     </div>
-                    <span id="label-memorial">紀念日</span>
+                    <span id="label-memorial" data-i18n="announcement.label_memorial">紀念日</span>
                 </div>
                 <div class="ios-row-accessory">
-                    <span class="ios-row-value" id="val-memorial">重要典禮</span>
+                    <span class="ios-row-value" id="val-memorial" data-i18n="announcement.val_memorial">重要典禮</span>
                     <svg class="ios-chevron" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
                 </div>
             </a>
@@ -96,10 +98,10 @@
                     <div class="ios-badge badge-blue">
                         <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
                     </div>
-                    <span id="label-ukraine">聲援烏克蘭</span>
+                    <span id="label-ukraine" data-i18n="announcement.label_ukraine">聲援烏克蘭</span>
                 </div>
                 <div class="ios-row-accessory">
-                    <span class="ios-row-value" id="val-ukraine">和平聲明</span>
+                    <span class="ios-row-value" id="val-ukraine" data-i18n="announcement.val_ukraine">和平聲明</span>
                     <svg class="ios-chevron" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
                 </div>
             </a>
@@ -135,74 +137,6 @@
         </a>
     </nav>
 
-    <script type="module">
-        import { initSubpage } from '../../js/subpage.js?v=20260907f';
-        import { getCurrentLang, setGlobalLang } from '../../js/modules/i18n.js?v=20260907f';
-        import { syncStandaloneTabBar } from '../../js/modules/tab-bar.js?v=20260907f';
-
-        const announcementStrings = {
-            tc: {
-                pageTitle: '公告 - 私立中山紀念堂',
-                topTitle: '公告',
-                secAnnounce: '堂務公告 (ANNOUNCEMENTS)',
-                status: '網站狀態',
-                valStatus: '運行正常',
-                memorial: '紀念日',
-                valMemorial: '重要典禮',
-                ukraine: '聲援烏克蘭',
-                valUkraine: '和平聲明'
-            },
-            sc: {
-                pageTitle: '公告 - 私立中山纪念堂',
-                topTitle: '公告',
-                secAnnounce: '堂务公告 (ANNOUNCEMENTS)',
-                status: '网站状态',
-                valStatus: '运行正常',
-                memorial: '纪念日',
-                valMemorial: '重要典礼',
-                ukraine: '声援乌克兰',
-                valUkraine: '和平声明'
-            }
-        };
-
-        function syncAnnouncementTexts(lang) {
-            const s = announcementStrings[lang] || announcementStrings.tc;
-            const pageTitle = document.getElementById('page-title');
-            if (pageTitle) pageTitle.textContent = s.pageTitle;
-            const topNavTitle = document.getElementById('top-nav-title');
-            if (topNavTitle) topNavTitle.textContent = s.topTitle;
-
-            const secAnn = document.getElementById('sec-announcements');
-            if (secAnn) secAnn.textContent = s.secAnnounce;
-
-            const labelStatus = document.getElementById('label-status');
-            if (labelStatus) labelStatus.textContent = s.status;
-            const valStatus = document.getElementById('val-status');
-            if (valStatus) valStatus.textContent = s.valStatus;
-
-            const labelMemorial = document.getElementById('label-memorial');
-            if (labelMemorial) labelMemorial.textContent = s.memorial;
-            const valMemorial = document.getElementById('val-memorial');
-            if (valMemorial) valMemorial.textContent = s.valMemorial;
-
-            const labelUkraine = document.getElementById('label-ukraine');
-            if (labelUkraine) labelUkraine.textContent = s.ukraine;
-            const valUkraine = document.getElementById('val-ukraine');
-            if (valUkraine) valUkraine.textContent = s.valUkraine;
-        }
-
-        initSubpage({
-            activeBottomTab: 'announcement',
-            basePath: '../../'
-        });
-
-        syncStandaloneTabBar();
-        syncAnnouncementTexts(getCurrentLang());
-        window.addEventListener('sys-lang-change', (e) => {
-            if (e.detail && e.detail.lang) {
-                syncAnnouncementTexts(e.detail.lang);
-            }
-        });
-    </script>
+    <script type="module" src="../../js/boot.js"></script>
 </body>
 </html>

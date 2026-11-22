@@ -7,6 +7,8 @@
  * 3. All prose is written in English.
  * ============================================================================ */
 
+import { t } from './i18n.js';
+
 /* ============================================================================
  * Toast Banner System (Ceremonial Top Banners)
  * ============================================================================ */
@@ -79,33 +81,35 @@ export function showToast(msg, type = 'info') {
 /* ============================================================================
  * Humanized Error Formatter
  * ============================================================================ */
-export function formatError(err, fallbackMsg = '操作失敗，請稍後重試') {
+export function formatError(err, fallbackMsg = null) {
+    const resolvedFallback = fallbackMsg || t('errors.default');
+
     /* Send detailed trace to console for developers */
     if (err) {
         console.error('[App Error Trace]:', err);
     }
 
-    if (!err) return fallbackMsg;
+    if (!err) return resolvedFallback;
 
     const errMsg = (err.message || String(err)).toLowerCase();
 
     if (errMsg.includes('failed to fetch') || errMsg.includes('networkerror') || errMsg.includes('network error')) {
-        return '連線異常，請檢查網路連線';
+        return t('errors.network');
     }
     if (errMsg.includes('timeout') || errMsg.includes('aborterror')) {
-        return '連線超時，請稍後重試';
+        return t('errors.timeout');
     }
     if (errMsg.includes('rate limit') || errMsg.includes('429')) {
-        return '請求過於頻繁，請稍後再試';
+        return t('errors.rate_limit');
     }
     if (errMsg.includes('500') || errMsg.includes('internal server error')) {
-        return '伺服器忙碌中，請稍候重試';
+        return t('errors.server_busy');
     }
     if (errMsg.includes('prohibited') || errMsg.includes('filtered') || errMsg.includes('sensitive')) {
-        return '內容包含敏感或不合規詞彙';
+        return t('errors.prohibited');
     }
 
-    return fallbackMsg;
+    return resolvedFallback;
 }
 
 /* ============================================================================

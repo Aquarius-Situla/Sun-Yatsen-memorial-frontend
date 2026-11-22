@@ -15,12 +15,13 @@ import { initDesktopParallax, initGyroscopeLighting } from './modules/motion.js'
 import { toggleDanmaku } from './modules/danmaku.js';
 import { setupMessageSheet } from './modules/message-sheet.js';
 import { loadAndTriggerFireworks } from './modules/fireworks.js';
-import { syncTabBarLabels, getCurrentLang } from './modules/i18n.js?v=20260907f';
-import { syncStandaloneTabBar } from './modules/tab-bar.js?v=20260907f';
-import { setupDiagnosticTrigger } from './modules/debug-panel.js?v=20260907f';
-import { initDesktopShell } from './modules/desktop-shell.js?v=20260907f';
-import { hideActivityIndicator } from './modules/activity-indicator.js?v=20260907f';
-import { initDeviceLayout, initOrientationGuard, isMobileLayout, isDesktopLayout } from './modules/device-detect.js?v=20260907f';
+import { t, applyTranslations, syncTabBarLabels } from './modules/i18n.js';
+import { syncStandaloneTabBar } from './modules/tab-bar.js';
+import { setupDiagnosticTrigger } from './modules/debug-panel.js';
+import { initDesktopShell } from './modules/desktop-shell.js';
+import { hideActivityIndicator } from './modules/activity-indicator.js';
+import { initDeviceLayout, initOrientationGuard, isMobileLayout, isDesktopLayout } from './modules/device-detect.js';
+import { getPageSignal, onPageUnmount } from './core/lifecycle.js';
 
 /* Expose fireworks loader globally for legacy triggers */
 window.loadAndTriggerFireworks = loadAndTriggerFireworks;
@@ -47,9 +48,7 @@ export function toggleDanmakuLayer() {
     const danmakuContainer = document.getElementById('danmaku-container');
     const portraitImg = document.querySelector('.portrait-img');
     toggleDanmaku(WORKER_API, danmakuContainer, portraitImg, (isEnabled) => {
-        const isTc = getCurrentLang() === 'tc';
-        const msg = isEnabled ? (isTc ? '彈幕已開啟' : '弹幕已开启') : (isTc ? '彈幕已關閉' : '弹幕已关闭');
-        showToast(msg, 'system');
+        showToast(isEnabled ? t('danmaku.enabled') : t('danmaku.disabled'), 'system');
     });
 }
 window.toggleDanmakuLayer = toggleDanmakuLayer;
@@ -62,7 +61,7 @@ export function setupTestamentInteractions(testamentBox) {
     testamentBox.style.cursor = 'pointer';
     testamentBox.setAttribute('role', 'button');
     testamentBox.setAttribute('tabindex', '0');
-    testamentBox.setAttribute('aria-label', '總理遺囑');
+    testamentBox.setAttribute('aria-label', t('home.testament_aria'));
 
     const testamentText = testamentBox.querySelector('.testament-text') || testamentBox;
 
@@ -165,6 +164,56 @@ export function setupTestamentInteractions(testamentBox) {
 }
 
 /* ============================================================================
+ * Mobile Navigation Dropdown Helper
+ * ============================================================================ */
+function setupDropdownNav(mobileArrowBtn, dropdownNavBar) {
+    let navHideTimeout = null;
+    const signal = getPageSignal();
+
+    const toggleDropdownNav = (e) => {
+        if (e) e.stopPropagation();
+        if (document.body.classList.contains('banner-active') || !dropdownNavBar) return;
+        if (navHideTimeout) clearTimeout(navHideTimeout);
+        dropdownNavBar.classList.add('force-show');
+        navHideTimeout = setTimeout(() => {
+            dropdownNavBar.classList.remove('force-show');
+        }, 4000);
+    };
+
+    window.handleMobileArrowClick = toggleDropdownNav;
+
+    onPageUnmount(() => {
+        if (navHideTimeout) {
+            clearTimeout(navHideTimeout);
+            navHideTimeout = null;
+        }
+    });
+
+    if (mobileArrowBtn && dropdownNavBar) {
+        mobileArrowBtn.addEventListener('click', toggleDropdownNav, { signal });
+
+        dropdownNavBar.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (navHideTimeout) {
+                clearTimeout(navHideTimeout);
+                navHideTimeout = setTimeout(() => {
+                    dropdownNavBar.classList.remove('force-show');
+                }, 4000);
+            }
+        }, { signal });
+
+        document.addEventListener('click', (e) => {
+            if (!dropdownNavBar.contains(e.target) && !mobileArrowBtn.contains(e.target)) {
+                if (dropdownNavBar.classList.contains('force-show')) {
+                    dropdownNavBar.classList.remove('force-show');
+                    if (navHideTimeout) clearTimeout(navHideTimeout);
+                }
+            }
+        }, { signal });
+    }
+}
+
+/* ============================================================================
  * Application Initialization Controller
  * ============================================================================ */
 export function initApp() {
@@ -183,12 +232,24 @@ export function initApp() {
         const openMessageBtn    = document.getElementById('open-message-btn');
         const messageModal      = document.getElementById('message-modal');
         const messageInput      = document.getElementById('message-input');
+        const mobileArrowBtn    = document.getElementById('mobile-arrow-btn');
+        const dropdownNavBar    = document.querySelector('.dropdown-nav-bar');
+        const navFestivalBanner = document.getElementById('nav-festival-banner');
+
+        try {
+            applyTranslations();
+            displayMinguoDate();
+            initFestivalBanner(navFestivalBanner);
+        } catch (err) {
+            console.error('[Calendar Re-bind Error]:', err);
+        }
 
         if (attendanceCountEl) {
             const cached = sessionStorage.getItem('sys_attendance_count');
             if (cached) attendanceCountEl.innerText = cached;
         }
-        if (portraitBtn && window.handlePortraitClick) {
+        if (portraitBtn && window.handlePortraitClick && !portraitBtn.dataset.bound) {
+            portraitBtn.dataset.bound = 'true';
             portraitBtn.setAttribute('role', 'button');
             portraitBtn.setAttribute('tabindex', '0');
             portraitBtn.style.cursor = 'pointer';
@@ -205,7 +266,8 @@ export function initApp() {
                 /* Motion re-bind ignore */
             }
         }
-        if (desktopMsgCard) {
+        if (desktopMsgCard && !desktopMsgCard.dataset.bound) {
+            desktopMsgCard.dataset.bound = 'true';
             desktopMsgCard.addEventListener('click', (e) => {
                 e.preventDefault();
                 if (openMessageBtn) {
@@ -216,6 +278,8 @@ export function initApp() {
                 }
             });
         }
+
+        setupDropdownNav(mobileArrowBtn, dropdownNavBar);
 
         /* Re-bind message modal interactive elements on return */
         const historyMessageBtn = document.getElementById('history-message-btn');
@@ -248,6 +312,8 @@ export function initApp() {
 
         return;
     }
+
+    window.__appInitialized = true;
     /* Initialize device layout classes and smartphone orientation blocker */
     initDeviceLayout();
     initOrientationGuard();
@@ -323,18 +389,22 @@ export function initApp() {
         if (isFromReturn) {
             window.history.replaceState({}, document.title, window.location.pathname);
         } else {
-            setTimeout(() => {
-                triggerToastBanner('請向國父遺像行三鞠躬禮', 5000);
+            const welcomeTimer = setTimeout(() => {
+                triggerToastBanner(t('home.bow_prompt'), 5000);
             }, 1000);
+            onPageUnmount(() => clearTimeout(welcomeTimer));
         }
 
         const triggerPortraitMusic = () => {
             if (!audio) return;
             if (audio.paused) {
-                triggerToastBanner('請起立', 2000);
+                triggerToastBanner(t('home.stand_up_prompt'), 2000);
                 playMemorialMusic(audio, () => {
                     if (memorialBanner) memorialBanner.classList.add('hidden');
-                    if (sitDownBanner) sitDownBanner.classList.add('show');
+                    if (sitDownBanner) {
+                        sitDownBanner.textContent = t('home.sit_down_prompt');
+                        sitDownBanner.classList.add('show');
+                    }
                     document.body.classList.add('banner-active');
 
                     setTimeout(() => {
@@ -343,13 +413,14 @@ export function initApp() {
                     }, 6000);
                 });
             } else {
-                triggerToastBanner('請肅立！', 2000);
+                triggerToastBanner(t('home.attention_prompt'), 2000);
             }
         };
 
         window.handlePortraitClick = triggerPortraitMusic;
 
-        if (portraitBtn) {
+        if (portraitBtn && !portraitBtn.dataset.bound) {
+            portraitBtn.dataset.bound = 'true';
             portraitBtn.setAttribute('role', 'button');
             portraitBtn.setAttribute('tabindex', '0');
             portraitBtn.style.cursor = 'pointer';
@@ -411,11 +482,15 @@ export function initApp() {
      * 7. Apple Native Bottom Tab Bar Synchronization & Danmaku Trigger
      * ======================================================================== */
     try {
+        applyTranslations();
         syncTabBarLabels();
         syncStandaloneTabBar();
-        window.addEventListener('sys-lang-change', () => {
-            syncTabBarLabels();
-        });
+        if (!window.__appTabBarLangBound) {
+            window.__appTabBarLangBound = true;
+            window.addEventListener('sys-lang-change', () => {
+                syncTabBarLabels();
+            });
+        }
 
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('open') === 'danmaku') {
@@ -431,42 +506,7 @@ export function initApp() {
      * 8. Mobile Navigation Dropdown Controls
      * ======================================================================== */
     try {
-        let navHideTimeout = null;
-
-        const toggleDropdownNav = (e) => {
-            if (e) e.stopPropagation();
-            if (document.body.classList.contains('banner-active') || !dropdownNavBar) return;
-            if (navHideTimeout) clearTimeout(navHideTimeout);
-            dropdownNavBar.classList.add('force-show');
-            navHideTimeout = setTimeout(() => {
-                dropdownNavBar.classList.remove('force-show');
-            }, 4000);
-        };
-
-        window.handleMobileArrowClick = toggleDropdownNav;
-
-        if (mobileArrowBtn && dropdownNavBar) {
-            mobileArrowBtn.addEventListener('click', toggleDropdownNav);
-
-            dropdownNavBar.addEventListener('click', (e) => {
-                e.stopPropagation();
-                if (navHideTimeout) {
-                    clearTimeout(navHideTimeout);
-                    navHideTimeout = setTimeout(() => {
-                        dropdownNavBar.classList.remove('force-show');
-                    }, 4000);
-                }
-            });
-
-            document.addEventListener('click', (e) => {
-                if (!dropdownNavBar.contains(e.target) && !mobileArrowBtn.contains(e.target)) {
-                    if (dropdownNavBar.classList.contains('force-show')) {
-                        dropdownNavBar.classList.remove('force-show');
-                        if (navHideTimeout) clearTimeout(navHideTimeout);
-                    }
-                }
-            });
-        }
+        setupDropdownNav(mobileArrowBtn, dropdownNavBar);
     } catch (err) {
         console.error('[Dropdown Nav Error]:', err);
     }
