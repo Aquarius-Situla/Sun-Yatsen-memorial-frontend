@@ -142,7 +142,7 @@ At container startup, [docker/40-env-config.sh](docker/40-env-config.sh) writes 
 
 Access the Admin Dashboard via `/#admin` or `/pages/admin/index.html`.
 
-- **Authentication**: Uses a client-side SHA-256 hash of `ADMIN_SECRET` verified against the backend, guarded by PlayCaptcha. If deployed behind Nginx Proxy Manager + Situla Auth, `/api/sso_key` enables transparent SSO sign-in.
+- **Authentication**: Uses a client-side SHA-256 hash of `ADMIN_SECRET` verified against the backend, guarded by PlayCaptcha.
 - **Capabilities**:
   - View and delete live danmaku messages, and trigger AI supervised learning on missed violations.
   - Upload and synchronize `public.json` and `private.json` prohibited word lists to Cloudflare KV.
