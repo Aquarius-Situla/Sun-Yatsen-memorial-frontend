@@ -74,7 +74,8 @@ if (loginForm) {
                 submitBtn.textContent = '登入中...';
                 const tempKey = await hashSHA256(pwd);
                 
-                const res = await fetch(WORKER_API + '/admin/config?admin_key=' + encodeURIComponent(tempKey), {
+                const res = await fetch(WORKER_API + '/admin/config', {
+                    headers: { 'X-Admin-Key': tempKey },
                     cache: 'no-store'
                 });
                 
@@ -241,7 +242,10 @@ function showDashboard() {
 
 async function loadConfig() {
     try {
-        const res = await fetch(WORKER_API + '/admin/config?admin_key=' + encodeURIComponent(adminKey), { cache: 'no-store' });
+        const res = await fetch(WORKER_API + '/admin/config', {
+            headers: { 'X-Admin-Key': adminKey },
+            cache: 'no-store'
+        });
         if (res.ok) {
             const data = await res.json();
             whitelistToggle.checked = data.whitelistMode;
@@ -772,7 +776,10 @@ logoutBtn.addEventListener('click', showLogin);
 
 /* Initial check: verify existing token or attempt SSO handshake. */
 if (adminKey) {
-    fetch(WORKER_API + '/admin/config?admin_key=' + encodeURIComponent(adminKey))
+    fetch(WORKER_API + '/admin/config', {
+        headers: { 'X-Admin-Key': adminKey },
+        cache: 'no-store'
+    })
         .then(res => {
             if (res.ok) {
                 showDashboard();
@@ -798,7 +805,10 @@ if (adminKey) {
             if (data && data.key) {
                 /* If key is already a 64-char hex string (SHA-256), use directly; otherwise hash it. */
                 const tempKey = data.key.length === 64 ? data.key : await hashSHA256(data.key);
-                const res = await fetch(WORKER_API + '/admin/config?admin_key=' + encodeURIComponent(tempKey), { cache: 'no-store' });
+                const res = await fetch(WORKER_API + '/admin/config', {
+                    headers: { 'X-Admin-Key': tempKey },
+                    cache: 'no-store'
+                });
                 if (res.ok) {
                     adminKey = tempKey;
                     localStorage.setItem('danmaku_admin_key', adminKey);

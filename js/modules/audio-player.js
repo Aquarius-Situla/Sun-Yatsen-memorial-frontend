@@ -8,7 +8,7 @@
  * ============================================================================ */
 
 export const DEFAULT_MUSIC = {
-    src: './main/sanmin/sanmin.flac',
+    src: './main/sanmin/sanmin.mp3',
     title: '三民主義歌',
     artist: '孫文'
 };

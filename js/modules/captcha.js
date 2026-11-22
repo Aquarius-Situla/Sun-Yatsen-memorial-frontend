@@ -7,87 +7,55 @@
  * 3. All prose is written in English.
  * ============================================================================ */
 
-let captchaLoaded = false;
-let captchaRoot = null;
+let captchaSuccessCallback = null;
 
-export function loadCaptcha() {
-    return new Promise((resolve, reject) => {
-        if (captchaLoaded) return resolve();
+if (typeof window !== 'undefined') {
+    /* Listen for completion signal from isolated PlayCaptcha iframe */
+    window.addEventListener('message', (event) => {
+        if (event.data && event.data.type === 'CAPTCHA_SUCCESS') {
+            const overlay = document.getElementById('captcha-modal-overlay');
+            if (overlay) overlay.classList.remove('active');
 
-        const css = document.createElement('link');
-        css.rel = 'stylesheet';
-        css.href = 'captcha/clawcaptcha.css';
-
-        const mainStyle = document.querySelector('link[href*="main/style.css"]');
-        if (mainStyle) {
-            document.head.insertBefore(css, mainStyle);
-        } else {
-            document.head.appendChild(css);
+            if (captchaSuccessCallback) {
+                const cb = captchaSuccessCallback;
+                captchaSuccessCallback = null;
+                setTimeout(cb, 300);
+            }
         }
+    });
 
-        const react = document.createElement('script');
-        react.src = 'captcha/react.production.min.js';
-
-        const reactDom = document.createElement('script');
-        reactDom.src = 'captcha/react-dom.production.min.js';
-
-        const bundled = document.createElement('script');
-        bundled.src = 'captcha/bundled.js?v=2';
-
-        react.onload = () => {
-            document.head.appendChild(reactDom);
-        };
-        reactDom.onload = () => {
-            document.head.appendChild(bundled);
-        };
-        bundled.onload = () => {
-            captchaLoaded = true;
-            resolve();
-        };
-        bundled.onerror = reject;
-
-        document.head.appendChild(react);
+    /* Allow dismissing captcha by clicking outer backdrop */
+    document.addEventListener('click', (e) => {
+        const overlay = document.getElementById('captcha-modal-overlay');
+        if (overlay && e.target === overlay) {
+            overlay.classList.remove('active');
+            captchaSuccessCallback = null;
+        }
     });
 }
 
-export async function showCaptchaModal(onVerified) {
-    const overlay = document.getElementById('captcha-modal-overlay');
-    const rootEl = document.getElementById('captcha-root');
-
-    if (overlay) overlay.classList.add('active');
-
-    if (!captchaLoaded) {
-        if (rootEl) {
-            rootEl.innerHTML = '<div style="color:var(--text-secondary,#888888);">載入驗證碼中...</div>';
+/* ============================================================================
+ * Public Trigger for Human Verification
+ * ============================================================================ */
+export function showCaptchaModal(onVerified) {
+    const isDev = typeof localStorage !== 'undefined' && localStorage.getItem('developer_mode') === 'true';
+    if (isDev) {
+        if (typeof onVerified === 'function') {
+            setTimeout(onVerified, 100);
         }
-        await loadCaptcha();
+        return;
     }
 
-    if (!captchaRoot && rootEl && window.ReactDOM) {
-        captchaRoot = window.ReactDOM.createRoot(rootEl);
+    const overlay = document.getElementById('captcha-modal-overlay');
+    const iframe = document.getElementById('captcha-iframe');
+
+    if (!overlay || !iframe) {
+        return;
     }
 
-    if (!captchaRoot) return;
+    captchaSuccessCallback = onVerified;
 
-    const App = () => {
-        return window.React.createElement(window.ClawCaptcha, {
-            onVerify: () => {
-                if (overlay) overlay.classList.remove('active');
-
-                if (typeof onVerified === 'function') {
-                    onVerified();
-                }
-
-                setTimeout(() => {
-                    if (captchaRoot) {
-                        captchaRoot.unmount();
-                        captchaRoot = null;
-                    }
-                }, 500);
-            },
-            assetBase: 'captcha/assets/toys/'
-        });
-    };
-
-    captchaRoot.render(window.React.createElement(App));
+    /* Reload the iframe to ensure a fresh Captcha challenge */
+    iframe.src = iframe.src;
+    overlay.classList.add('active');
 }

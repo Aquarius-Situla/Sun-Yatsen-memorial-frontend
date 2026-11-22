@@ -8,7 +8,7 @@
 function isFireworksFestival() {
     const today = new Date();
     
-    // Check hash for forced test mode
+    /* Check hash for forced test mode */
     if (window.location.hash.includes('celebration')) {
         return true;
     }
@@ -17,12 +17,12 @@ function isFireworksFestival() {
     const month = today.getMonth() + 1;
     const date = today.getDate();
 
-    // 1. Gregorian New Year (Jan 1)
+    /* 1. Gregorian New Year (Jan 1) */
     if (month === 1 && date === 1) {
         return true;
     }
 
-    // 2. Lunar Dates (Hardcoded Spring Festival dates 2024-2038)
+    /* 2. Lunar Dates (Hardcoded Spring Festival dates 2024-2038) */
     const lunarNewYears = {
         2024: '2024-02-10', 2025: '2025-01-29', 2026: '2026-02-17',
         2027: '2027-02-06', 2028: '2028-01-26', 2029: '2029-02-13',
@@ -34,26 +34,27 @@ function isFireworksFestival() {
     const lnyString = lunarNewYears[year];
     if (!lnyString) return false;
 
-    // Create dates localized at midnight to avoid timezone shift issues
+    /* Create dates localized at midnight to avoid timezone shift issues */
     const todayMidnight = new Date(year, month - 1, date).getTime();
     
-    // Parse LNY string locally
+    /* Parse LNY string locally */
     const [lnyY, lnyM, lnyD] = lnyString.split('-').map(Number);
     const lnyDate = new Date(lnyY, lnyM - 1, lnyD).getTime();
 
     const dayInMs = 24 * 60 * 60 * 1000;
     const diffDays = Math.round((todayMidnight - lnyDate) / dayInMs);
 
-    // diffDays mapping:
-    // -1 : Lunar Eve (除夕)
-    //  0 : Lunar Jan 1 (初一)
-    //  1 : Lunar Jan 2 (初二)
-    //  2 : Lunar Jan 3 (初三)
-    // 14 : Lunar Jan 15 (十五)
-    
+    /*
+     * diffDays mapping:
+     * -1 : Lunar Eve
+     *  0 : Lunar Jan 1
+     *  1 : Lunar Jan 2
+     *  2 : Lunar Jan 3
+     * 14 : Lunar Jan 15 (Lantern Festival)
+     */
     const validOffsets = [-1, 0, 1, 2, 14];
     return validOffsets.includes(diffDays);
 }
 
-// Global exposure
+/* Global exposure */
 window.isFireworksFestival = isFireworksFestival;

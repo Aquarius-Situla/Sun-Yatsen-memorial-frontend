@@ -1,0 +1,13 @@
+.git
+.github
+.gitignore
+.dockerignore
+docker/
+tools/
+api/env.js
+api/prohibited_words/private.json
+node_modules/
+dist/
+*.md
+LICENSE
+*.log
