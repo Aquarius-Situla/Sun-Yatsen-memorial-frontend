@@ -12,6 +12,7 @@ COPY docker/40-env-config.sh /docker-entrypoint.d/40-env-config.sh
 RUN sed -i 's/\r$//' /docker-entrypoint.d/40-env-config.sh && chmod +x /docker-entrypoint.d/40-env-config.sh
 
 COPY . /usr/share/nginx/html
+RUN rm -rf /usr/share/nginx/html/docker /usr/share/nginx/html/Dockerfile
 
 EXPOSE 80
 
