@@ -60,12 +60,9 @@ export function initTabBar(options = {}) {
 
     let tabBarEl = document.getElementById('apple-tab-bar');
 
-    /* Subpages never inject a bottom tab bar; hide any legacy element on mobile */
+    /* Subpages never inject a bottom tab bar; mark body class so CSS hides any legacy bar */
     if (isSubpageRoute()) {
         document.body.classList.add('is-subpage');
-        if (tabBarEl && isMobileLayout()) {
-            tabBarEl.style.setProperty('display', 'none', 'important');
-        }
         return null;
     }
 
@@ -227,22 +224,12 @@ const MOBILE_TOP_TITLE_KEYS = {
 export function updateMobileNavState(targetTabId) {
     const onSubpage = isSubpageRoute();
 
-    /* If currently on a subpage, keep bottom tab bar hidden and top nav visible */
+    /* If currently on a subpage, keep bottom tab bar hidden and top nav visible on mobile */
     if (onSubpage) {
         document.body.classList.add('is-subpage');
-        const tabBar = document.getElementById('apple-tab-bar');
-        if (tabBar && isMobileLayout()) {
-            tabBar.style.setProperty('display', 'none', 'important');
-        }
         const topNav = document.querySelector('.apple-top-nav');
-        if (topNav) {
-            if (isMobileLayout()) {
-                topNav.classList.remove('nav-hidden');
-                topNav.style.removeProperty('display');
-                topNav.style.setProperty('display', 'flex', 'important');
-            } else {
-                topNav.style.setProperty('display', 'none', 'important');
-            }
+        if (topNav && isMobileLayout()) {
+            topNav.classList.remove('nav-hidden');
         }
         return;
     }
@@ -270,32 +257,19 @@ export function updateMobileNavState(targetTabId) {
     if (targetTabId === 'home') {
         if (topNav) {
             topNav.classList.add('nav-hidden');
-            topNav.style.setProperty('display', 'none', 'important');
         }
         /* Restore home top elements */
         const homeTopTrigger = document.querySelector('.top-hover-trigger');
         if (homeTopTrigger) {
             homeTopTrigger.classList.remove('nav-hidden');
-            homeTopTrigger.style.removeProperty('display');
-            homeTopTrigger.style.removeProperty('opacity');
-            homeTopTrigger.style.removeProperty('visibility');
-            homeTopTrigger.style.removeProperty('pointer-events');
         }
         const mobileArrow = document.getElementById('mobile-arrow-btn');
         if (mobileArrow) {
             mobileArrow.classList.remove('nav-hidden');
-            mobileArrow.style.removeProperty('display');
-            mobileArrow.style.removeProperty('opacity');
-            mobileArrow.style.removeProperty('visibility');
-            mobileArrow.style.removeProperty('pointer-events');
         }
         const dropdownNav = document.querySelector('.dropdown-nav-bar');
         if (dropdownNav) {
             dropdownNav.classList.remove('nav-hidden');
-            dropdownNav.style.removeProperty('display');
-            dropdownNav.style.removeProperty('opacity');
-            dropdownNav.style.removeProperty('visibility');
-            dropdownNav.style.removeProperty('pointer-events');
         }
     } else {
         /* Immediately unload and hide Home page dropdown navigation bar, arrow hint, and status banners */
@@ -309,10 +283,6 @@ export function updateMobileNavState(targetTabId) {
         homeElementsToHide.forEach(el => {
             if (el) {
                 el.classList.add('nav-hidden');
-                el.style.setProperty('display', 'none', 'important');
-                el.style.setProperty('opacity', '0', 'important');
-                el.style.setProperty('visibility', 'hidden', 'important');
-                el.style.setProperty('pointer-events', 'none', 'important');
             }
         });
 
@@ -324,9 +294,6 @@ export function updateMobileNavState(targetTabId) {
         }
         if (isMobileLayout()) {
             topNav.classList.remove('nav-hidden');
-            topNav.style.setProperty('display', 'flex', 'important');
-        } else {
-            topNav.style.setProperty('display', 'none', 'important');
         }
         const titleEl = topNav.querySelector('#top-nav-title');
         if (titleEl) {
@@ -485,31 +452,18 @@ if (typeof window !== 'undefined') {
         document.body.classList.remove('tab-navigating');
         hideActivityIndicator(document.body);
 
-        /* Subpages: ensure bottom tab bar is hidden and top nav is visible */
+        /* Subpages: ensure bottom tab bar is hidden and top nav is visible on mobile */
         if (isSubpageRoute()) {
             document.body.classList.add('is-subpage');
             const topNav = document.querySelector('.apple-top-nav');
-            if (topNav) {
-                if (isMobileLayout()) {
-                    topNav.classList.remove('nav-hidden');
-                    topNav.style.removeProperty('display');
-                    topNav.style.setProperty('display', 'flex', 'important');
-                } else {
-                    topNav.style.setProperty('display', 'none', 'important');
-                }
-            }
-            const tabBar = document.getElementById('apple-tab-bar');
-            if (tabBar && isMobileLayout()) {
-                tabBar.style.setProperty('display', 'none', 'important');
+            if (topNav && isMobileLayout()) {
+                topNav.classList.remove('nav-hidden');
             }
             return;
         }
 
         /* Hub menu pages: restore bottom tab bar */
-        const tabBar = document.getElementById('apple-tab-bar');
-        if (tabBar) {
-            tabBar.style.removeProperty('display');
-        }
+        document.body.classList.remove('is-subpage');
 
         /* Re-sync active tab and top nav according to the restored page's true URL */
         const path = window.location.pathname.toLowerCase();

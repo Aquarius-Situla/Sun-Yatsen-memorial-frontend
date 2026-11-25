@@ -456,12 +456,6 @@ export async function navigateDesktopStage(targetHref, pushState = true, fromSid
         await executeStageScripts(doc, targetUrl.href);
         if (navToken !== activeNavToken) return;
 
-        /* Guarantee mobile top navigation bar is strictly hidden on desktop */
-        const topNav = document.querySelector('.apple-top-nav');
-        if (topNav) {
-            topNav.style.setProperty('display', 'none', 'important');
-        }
-
         /* 8. Allow browser engine to calculate layout and apply styles before revealing */
         await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
         if (navToken !== activeNavToken) return;
@@ -586,7 +580,7 @@ export function initDesktopShell(options = {}) {
             document.body.classList.remove('nav-from-sidebar');
             document.body.classList.add('nav-from-content');
         } else {
-            const exhibitTabs = new Set(['biography', 'xinhai', 'whampoa', 'mayfourth', 'militaries', 'yatsen-birth', 'yatsen-passing']);
+            const exhibitTabs = new Set(['xinhai', 'whampoa', 'mayfourth', 'militaries', 'yatsen-birth', 'yatsen-passing']);
             if (exhibitTabs.has(activeTab)) {
                 const ref = document.referrer;
                 const cameFromLibrary = ref && (ref.includes('/pages/library/') || ref.includes('library.html'));
@@ -624,12 +618,6 @@ export function initDesktopShell(options = {}) {
     /* Ensure content stage container exists and stylesheets are properly isolated */
     ensureStageContainer();
     ensurePageStylesheets(activeTab === 'home');
-
-    /* Guarantee mobile top navigation bar is strictly hidden on desktop */
-    const topNav = document.querySelector('.apple-top-nav');
-    if (topNav) {
-        topNav.style.setProperty('display', 'none', 'important');
-    }
 
     /* Check if sidebar already exists */
     let sidebarEl = document.getElementById('desktop-sidebar');
@@ -676,17 +664,8 @@ export function initDesktopShell(options = {}) {
     window.addEventListener('resize', () => {
         if (isDesktopLayout()) {
             ensureStageContainer();
-            const topNav = document.querySelector('.apple-top-nav');
-            if (topNav) {
-                topNav.style.setProperty('display', 'none', 'important');
-            }
             if (window.__syncIndicatorPosition) {
                 window.__syncIndicatorPosition();
-            }
-        } else {
-            const topNav = document.querySelector('.apple-top-nav');
-            if (topNav) {
-                topNav.style.removeProperty('display');
             }
         }
     });
@@ -703,8 +682,7 @@ function createSidebarElement(activeTab, basePath) {
         settings: resolveSiteUrl('pages/settings/settings.html'),
         xinhai: resolveSiteUrl('events/xinhai/xinhai.html'),
         whampoa: resolveSiteUrl('events/whampoa/whampoa.html'),
-        mayfourth: resolveSiteUrl('events/mayfourth/mayfourth.html'),
-        biography: resolveSiteUrl('pages/biography/biography.html')
+        mayfourth: resolveSiteUrl('events/mayfourth/mayfourth.html')
     };
 
     const aside = document.createElement('aside');
@@ -758,10 +736,6 @@ function createSidebarElement(activeTab, basePath) {
             <!-- Subgroup: Historical Exhibitions -->
             <div class="desktop-nav-section">
                 <div class="desktop-nav-header" id="desktop-exhibits-header" data-i18n="sidebar.exhibits_header">${t('sidebar.exhibits_header')}</div>
-                <a href="${routes.biography}" class="desktop-nav-item ${activeTab === 'biography' ? 'active' : ''}" data-sidebar-tab="biography">
-                    <svg viewBox="0 0 24 24"><path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 4h5v8l-2.5-1.5L6 12V4z"/></svg>
-                    <span class="desktop-nav-label" id="label-exhibit-biography" data-i18n="sidebar.exhibit_biography">${t('sidebar.exhibit_biography')}</span>
-                </a>
                 <a href="${routes.xinhai}" class="desktop-nav-item ${activeTab === 'xinhai' ? 'active' : ''}" data-sidebar-tab="xinhai">
                     <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
                     <span class="desktop-nav-label" id="label-exhibit-xinhai" data-i18n="sidebar.exhibit_xinhai">${t('sidebar.exhibit_xinhai')}</span>
@@ -778,10 +752,10 @@ function createSidebarElement(activeTab, basePath) {
         </div>
 
         <!-- Sidebar Footer Visitor Profile (Apple Music Profile Style with Identicon) -->
-        <div class="desktop-sidebar-bottom" style="border-top: 0.5px solid rgba(255, 255, 255, 0.08); padding-top: 10px; margin: 8px -12px 0 -12px; padding-left: 12px; padding-right: 12px; overflow: hidden !important; min-width: 0 !important; flex-shrink: 0;">
-            <div class="desktop-profile-card" id="desktop-profile-card" tabindex="0" role="button" data-i18n-aria-label="sidebar.visitor_label" aria-label="${t('sidebar.visitor_label')}" style="display: flex !important; align-items: center !important; gap: 8px !important; height: 24px !important; padding: 0 6px !important; min-width: 0 !important; overflow: hidden !important; width: 100% !important; box-sizing: border-box !important;">
-                <div class="desktop-profile-avatar" id="desktop-profile-avatar" style="width: 16px !important; height: 16px !important; border-radius: 50% !important; overflow: hidden !important; flex-shrink: 0 !important;"></div>
-                <span class="desktop-profile-uuid" id="desktop-profile-uuid" style="font-size: 11px !important; font-weight: 500 !important; font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Monaco, Consolas, monospace !important; letter-spacing: -0.2px !important; line-height: 1 !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; min-width: 0 !important; flex: 1 !important; display: block !important;"></span>
+        <div class="desktop-sidebar-bottom">
+            <div class="desktop-profile-card" id="desktop-profile-card" tabindex="0" role="button" data-i18n-aria-label="sidebar.visitor_label" aria-label="${t('sidebar.visitor_label')}">
+                <div class="desktop-profile-avatar" id="desktop-profile-avatar"></div>
+                <span class="desktop-profile-uuid" id="desktop-profile-uuid"></span>
             </div>
         </div>
     `;

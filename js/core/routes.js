@@ -203,7 +203,7 @@ function extractPathname(urlOrPath) {
 /* Map URL to canonical sidebar tab ID */
 export function getTabFromUrl(urlOrPath) {
     const path = extractPathname(urlOrPath);
-    if (path.includes('/biography/')) return 'biography';
+    if (path.includes('/biography/')) return 'library';
     if (path.includes('/events/xinhai/')) return 'xinhai';
     if (path.includes('/events/whampoa/')) return 'whampoa';
     if (path.includes('/events/mayfourth/')) return 'mayfourth';

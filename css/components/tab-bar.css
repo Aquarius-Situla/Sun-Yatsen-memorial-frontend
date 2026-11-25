@@ -9,19 +9,10 @@
  * 3. All prose is written in English.
  * ============================================================================ */
 
-/* ============================================================================
- * Desktop Isolation: Completely Hide Mobile Shell Bars on Screens > 768px on Desktop
- * ============================================================================ */
-@media (min-width: 769px) {
-    html:not(.device-mobile) .apple-tab-bar,
-    html:not(.device-mobile) .apple-top-nav {
-        display: none !important;
-    }
-}
-
-/* ============================================================================
- * Mobile & Tablet Component Definitions
- * ============================================================================ */
+@layer components {
+    /* ========================================================================
+     * Mobile & Tablet Component Definitions
+     * ======================================================================== */
     /* Fixed Apple Native Top Navigation Bar (Authentic Frosted Glass Header) */
     .apple-top-nav {
         position: fixed;
@@ -34,12 +25,12 @@
         display: flex;
         align-items: flex-end;
         justify-content: center;
-        background: rgba(20, 20, 22, 0.88);
+        background: var(--sys-surface-glass, rgba(22, 22, 24, 0.86));
         backdrop-filter: blur(25px) saturate(190%);
         -webkit-backdrop-filter: blur(25px) saturate(190%);
         -webkit-transform: translate3d(0, 0, 0);
         transform: translate3d(0, 0, 0);
-        border-bottom: 0.5px solid rgba(255, 255, 255, 0.15);
+        border-bottom: 0.5px solid var(--sys-border, rgba(255, 255, 255, 0.14));
         z-index: 25000;
         box-sizing: border-box;
         user-select: none;
@@ -47,39 +38,27 @@
         transition: opacity 0.18s ease;
     }
 
-    .apple-top-nav.nav-hidden {
-        display: none !important;
-    }
-
-    /* Cleanly unload and hide Home page dropdown navigation bar and arrow hint */
-    body.tab-navigating .top-hover-trigger,
-    body.tab-navigating .mobile-arrow-hint,
-    body.tab-navigating .dropdown-nav-bar,
-    body.tab-navigating .memorial-banner,
-    body.tab-navigating .status-banner,
-    .top-hover-trigger.nav-hidden,
-    .mobile-arrow-hint.nav-hidden,
-    .dropdown-nav-bar.nav-hidden {
-        display: none !important;
-        opacity: 0 !important;
-        visibility: hidden !important;
-        pointer-events: none !important;
-    }
-
     .apple-top-nav .nav-title {
-        font-size: 17px;
+        font-size: 16px;
         font-weight: 600;
         letter-spacing: -0.3px;
-        color: #ffffff;
-        font-family: -apple-system, BlinkMacSystemFont, "PingFang TC", "PingFang SC", "Microsoft JhengHei", sans-serif;
+        color: var(--sys-ink-strong, #ffffff);
+        font-family: var(--sys-font-family);
         margin: 0;
-        padding: 0;
+        padding: 0 116px;
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
         height: 44px;
         line-height: 44px;
-        display: flex;
-        align-items: center;
+        display: block;
+        text-align: center;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
         pointer-events: none;
     }
+
     /* Fixed Apple Native UITabBar Container (Authentic Translucent Frosted Glass) */
     .apple-tab-bar {
         position: fixed;
@@ -95,29 +74,14 @@
         display: flex;
         align-items: flex-start;
         justify-content: space-around;
-        background: rgba(22, 22, 24, 0.82);
+        background: var(--sys-surface-glass, rgba(22, 22, 24, 0.86));
         backdrop-filter: blur(25px) saturate(190%);
         -webkit-backdrop-filter: blur(25px) saturate(190%);
-        border-top: 0.5px solid rgba(255, 255, 255, 0.15);
+        border-top: 0.5px solid var(--sys-border, rgba(255, 255, 255, 0.14));
         box-sizing: border-box;
         z-index: 10000;
         user-select: none;
         -webkit-user-select: none;
-    }
-
-    /* Subpage Bottom Bar Hiding: completely hide tab bar when pushing into any subpage */
-    body.is-subpage .apple-tab-bar,
-    body.is-subpage #apple-tab-bar,
-    body:has(.nav-back-link) .apple-tab-bar,
-    body:has(.nav-back-link) #apple-tab-bar {
-        display: none !important;
-        visibility: hidden !important;
-        pointer-events: none !important;
-    }
-
-    body.is-subpage,
-    body:has(.nav-back-link) {
-        padding-bottom: calc(20px + env(safe-area-inset-bottom, 16px)) !important;
     }
 
     /* Standalone WebApp CSS: Anchor cleanly to device bottom */
@@ -140,7 +104,7 @@
         justify-content: flex-start;
         height: 48px;
         text-decoration: none;
-        color: #98989f;
+        color: var(--sys-text-secondary, #8e8e93);
         transition: color 0.18s ease, opacity 0.12s ease;
         -webkit-tap-highlight-color: transparent;
         cursor: pointer;
@@ -170,14 +134,14 @@
         font-size: 10.5px;
         font-weight: 500;
         letter-spacing: -0.24px;
-        font-family: -apple-system, BlinkMacSystemFont, "PingFang TC", "PingFang SC", "Microsoft JhengHei", sans-serif;
+        font-family: var(--sys-font-family);
         line-height: 1.15;
         margin-top: 1px;
     }
 
     /* Active Selected State (Authentic Apple iOS System Blue Tint) */
     .apple-tab-bar .tab-item.active {
-        color: #0a84ff;
+        color: var(--sys-accent, #0a84ff);
     }
 
     .apple-tab-bar .tab-item.active .tab-label {
@@ -189,33 +153,92 @@
         opacity: 0.7;
     }
 
-/* ============================================================================
- * Light Theme Color Overrides
- * ============================================================================ */
-@media (prefers-color-scheme: light) {
-    .apple-top-nav {
-        background: rgba(255, 255, 255, 0.75);
-        backdrop-filter: blur(25px) saturate(190%);
-        -webkit-backdrop-filter: blur(25px) saturate(190%);
-        border-bottom-color: rgba(0, 0, 0, 0.12);
+    /* ========================================================================
+     * Light Theme Color Overrides
+     * ======================================================================== */
+    @media (prefers-color-scheme: light) {
+        .apple-top-nav {
+            background: rgba(255, 255, 255, 0.84);
+            backdrop-filter: blur(25px) saturate(190%);
+            -webkit-backdrop-filter: blur(25px) saturate(190%);
+            border-bottom-color: rgba(0, 0, 0, 0.10);
+        }
+
+        .apple-top-nav .nav-title {
+            color: #1d1d1f;
+        }
+
+        .apple-tab-bar {
+            background: rgba(255, 255, 255, 0.84);
+            backdrop-filter: blur(25px) saturate(190%);
+            -webkit-backdrop-filter: blur(25px) saturate(190%);
+            border-top-color: rgba(0, 0, 0, 0.10);
+        }
+
+        .apple-tab-bar .tab-item {
+            color: #6e6e73;
+        }
+
+        .apple-tab-bar .tab-item.active {
+            color: #007aff;
+        }
+    }
+}
+
+@layer overrides {
+    /* Desktop Isolation: Completely Hide Mobile Shell Bars on Desktop Viewports */
+    @media (min-width: 769px) {
+        html:not(.device-mobile) .apple-tab-bar,
+        html:not(.device-mobile) .apple-top-nav {
+            display: none;
+        }
     }
 
-    .apple-top-nav .nav-title {
-        color: #000000;
+    html.device-desktop .apple-tab-bar,
+    html.device-desktop .apple-top-nav {
+        display: none;
     }
 
-    .apple-tab-bar {
-        background: rgba(255, 255, 255, 0.75);
-        backdrop-filter: blur(25px) saturate(190%);
-        -webkit-backdrop-filter: blur(25px) saturate(190%);
-        border-top-color: rgba(0, 0, 0, 0.12);
+    .apple-top-nav.nav-hidden {
+        display: none;
     }
 
-    .apple-tab-bar .tab-item {
-        color: #8e8e93;
+    /* Cleanly unload and hide Home page dropdown navigation bar and arrow hint */
+    body.tab-navigating .top-hover-trigger,
+    body.tab-navigating .mobile-arrow-hint,
+    body.tab-navigating .dropdown-nav-bar,
+    body.tab-navigating .memorial-banner,
+    body.tab-navigating .status-banner,
+    .top-hover-trigger.nav-hidden,
+    .mobile-arrow-hint.nav-hidden,
+    .dropdown-nav-bar.nav-hidden,
+    .memorial-banner.nav-hidden,
+    .status-banner.nav-hidden {
+        display: none;
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
     }
 
-    .apple-tab-bar .tab-item.active {
-        color: #007aff;
+    /* Subpage Bottom Bar Hiding: completely hide tab bar when pushing into any subpage */
+    body.is-subpage .apple-tab-bar,
+    body.is-subpage #apple-tab-bar,
+    body:has(.nav-back-link) .apple-tab-bar,
+    body:has(.nav-back-link) #apple-tab-bar {
+        display: none;
+        visibility: hidden;
+        pointer-events: none;
+    }
+
+    @media (max-width: 768px) {
+        body.is-subpage,
+        body:has(.nav-back-link) {
+            padding-bottom: calc(20px + env(safe-area-inset-bottom, 16px));
+        }
+    }
+
+    html.device-mobile body.is-subpage,
+    html.device-mobile body:has(.nav-back-link) {
+        padding-bottom: calc(20px + env(safe-area-inset-bottom, 16px));
     }
 }

@@ -141,8 +141,8 @@ export function init() {
             if (!canvas1 || !canvas2) return;
 
             const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
-            ChartLib.defaults.color = isDarkMode ? '#aaaaaa' : '#6b4c35';
-            ChartLib.defaults.font.family = '-apple-system, BlinkMacSystemFont, "PingFang TC", "PingFang SC", "Microsoft JhengHei", sans-serif';
+            ChartLib.defaults.color = isDarkMode ? '#8e8e93' : '#6e6e73';
+            ChartLib.defaults.font.family = '-apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang TC", "PingFang SC", "Microsoft JhengHei", sans-serif';
 
             const stageLabels = [
                 t('biography.stage_0'),
@@ -153,6 +153,9 @@ export function init() {
                 t('biography.stage_5')
             ];
 
+            const lineInk = isDarkMode ? '#f5f5f7' : '#1d1d1f';
+            const pointHoverInk = isDarkMode ? '#0a84ff' : '#007aff';
+
             const ctx1 = canvas1.getContext('2d');
             influenceChartInstance = new ChartLib(ctx1, {
                 type: 'line',
@@ -161,15 +164,15 @@ export function init() {
                     datasets: [{
                         label: t('biography.chart1_label'),
                         data: [10, 30, 80, 100, 60, 90],
-                        borderColor: '#f1c40f',
-                        backgroundColor: 'rgba(241, 196, 15, 0.1)',
+                        borderColor: lineInk,
+                        backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.10)' : 'rgba(29, 29, 31, 0.08)',
                         borderWidth: 2,
                         tension: 0.4,
                         fill: true,
-                        pointBackgroundColor: isDarkMode ? '#111111' : '#f5f0e8',
-                        pointBorderColor: '#f1c40f',
-                        pointHoverBackgroundColor: '#f1c40f',
-                        pointHoverBorderColor: '#ffffff'
+                        pointBackgroundColor: isDarkMode ? '#000000' : '#ffffff',
+                        pointBorderColor: lineInk,
+                        pointHoverBackgroundColor: pointHoverInk,
+                        pointHoverBorderColor: isDarkMode ? '#ffffff' : '#1d1d1f'
                     }]
                 },
                 options: {
@@ -177,7 +180,7 @@ export function init() {
                     plugins: { legend: { display: false } },
                     scales: {
                         y: { display: false, min: 0, max: 110 },
-                        x: { grid: { color: isDarkMode ? '#333333' : '#d4c4a0' } }
+                        x: { grid: { color: isDarkMode ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.08)' } }
                     }
                 }
             });
@@ -195,6 +198,13 @@ export function init() {
             };
 
             const ctx2 = canvas2.getContext('2d');
+            const cPurple = isDarkMode ? '#bf5af2' : '#af52de';
+            const cBlue   = isDarkMode ? '#0a84ff' : '#007aff';
+            const cOrange = isDarkMode ? '#ff9f0a' : '#ff9500';
+            const cGreen  = isDarkMode ? '#30d158' : '#34c759';
+            const cTeal   = isDarkMode ? '#64d2ff' : '#30b0c7';
+            const cRed    = isDarkMode ? '#ff453a' : '#ff3b30';
+
             sanminChartInstance = new ChartLib(ctx2, {
                 type: 'radar',
                 data: {
@@ -203,66 +213,66 @@ export function init() {
                         {
                             label: stageLabels[0],
                             data: [75, 45, 15],
-                            backgroundColor: 'rgba(155, 89, 182, 0.3)',
-                            borderColor: '#9b59b6',
-                            pointBackgroundColor: '#9b59b6',
-                            pointHoverBackgroundColor: '#fff',
-                            pointHoverBorderColor: '#9b59b6',
+                            backgroundColor: isDarkMode ? 'rgba(191, 90, 242, 0.28)' : 'rgba(175, 82, 222, 0.22)',
+                            borderColor: cPurple,
+                            pointBackgroundColor: cPurple,
+                            pointHoverBackgroundColor: '#ffffff',
+                            pointHoverBorderColor: cPurple,
                             borderWidth: 2,
                             hidden: !isAllShown
                         },
                         {
                             label: stageLabels[1],
                             data: [85, 65, 45],
-                            backgroundColor: 'rgba(52, 152, 219, 0.3)',
-                            borderColor: '#3498db',
-                            pointBackgroundColor: '#3498db',
-                            pointHoverBackgroundColor: '#fff',
-                            pointHoverBorderColor: '#3498db',
+                            backgroundColor: isDarkMode ? 'rgba(10, 132, 255, 0.28)' : 'rgba(0, 122, 255, 0.22)',
+                            borderColor: cBlue,
+                            pointBackgroundColor: cBlue,
+                            pointHoverBackgroundColor: '#ffffff',
+                            pointHoverBorderColor: cBlue,
                             borderWidth: 2,
                             hidden: !isAllShown
                         },
                         {
                             label: stageLabels[2],
                             data: [100, 70, 50],
-                            backgroundColor: 'rgba(243, 156, 18, 0.3)',
-                            borderColor: '#f39c12',
-                            pointBackgroundColor: '#f39c12',
-                            pointHoverBackgroundColor: '#fff',
-                            pointHoverBorderColor: '#f39c12',
+                            backgroundColor: isDarkMode ? 'rgba(255, 159, 10, 0.28)' : 'rgba(255, 149, 0, 0.22)',
+                            borderColor: cOrange,
+                            pointBackgroundColor: cOrange,
+                            pointHoverBackgroundColor: '#ffffff',
+                            pointHoverBorderColor: cOrange,
                             borderWidth: 2,
                             hidden: false
                         },
                         {
                             label: stageLabels[3],
                             data: [90, 100, 60],
-                            backgroundColor: 'rgba(46, 204, 113, 0.3)',
-                            borderColor: '#2ecc71',
-                            pointBackgroundColor: '#2ecc71',
-                            pointHoverBackgroundColor: '#fff',
-                            pointHoverBorderColor: '#2ecc71',
+                            backgroundColor: isDarkMode ? 'rgba(48, 209, 88, 0.28)' : 'rgba(52, 199, 89, 0.22)',
+                            borderColor: cGreen,
+                            pointBackgroundColor: cGreen,
+                            pointHoverBackgroundColor: '#ffffff',
+                            pointHoverBorderColor: cGreen,
                             borderWidth: 2,
                             hidden: !isAllShown
                         },
                         {
                             label: stageLabels[4],
                             data: [80, 90, 60],
-                            backgroundColor: 'rgba(26, 188, 156, 0.3)',
-                            borderColor: '#1abc9c',
-                            pointBackgroundColor: '#1abc9c',
-                            pointHoverBackgroundColor: '#fff',
-                            pointHoverBorderColor: '#1abc9c',
+                            backgroundColor: isDarkMode ? 'rgba(100, 210, 255, 0.28)' : 'rgba(48, 176, 199, 0.22)',
+                            borderColor: cTeal,
+                            pointBackgroundColor: cTeal,
+                            pointHoverBackgroundColor: '#ffffff',
+                            pointHoverBorderColor: cTeal,
                             borderWidth: 2,
                             hidden: !isAllShown
                         },
                         {
                             label: stageLabels[5],
                             data: [100, 95, 100],
-                            backgroundColor: 'rgba(231, 76, 60, 0.3)',
-                            borderColor: '#e74c3c',
-                            pointBackgroundColor: '#e74c3c',
-                            pointHoverBackgroundColor: '#fff',
-                            pointHoverBorderColor: '#e74c3c',
+                            backgroundColor: isDarkMode ? 'rgba(255, 69, 58, 0.28)' : 'rgba(255, 59, 48, 0.22)',
+                            borderColor: cRed,
+                            pointBackgroundColor: cRed,
+                            pointHoverBackgroundColor: '#ffffff',
+                            pointHoverBorderColor: cRed,
                             borderWidth: 2,
                             hidden: !isAllShown
                         }
@@ -278,11 +288,11 @@ export function init() {
                         r: {
                             min: 0,
                             max: 110,
-                            angleLines: { color: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)' },
-                            grid: { color: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)' },
+                            angleLines: { color: isDarkMode ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.10)' },
+                            grid: { color: isDarkMode ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.10)' },
                             pointLabels: {
                                 font: { size: 14, weight: 'bold' },
-                                color: isDarkMode ? '#e5e7eb' : '#6b4c35',
+                                color: isDarkMode ? '#f5f5f7' : '#1d1d1f',
                                 backdropColor: 'transparent'
                             },
                             ticks: { display: false }
@@ -291,13 +301,13 @@ export function init() {
                     plugins: {
                         legend: {
                             position: 'bottom',
-                            labels: { color: isDarkMode ? '#aaa' : '#6b4c35', padding: 15 }
+                            labels: { color: isDarkMode ? '#8e8e93' : '#6e6e73', padding: 15 }
                         },
                         tooltip: {
-                            backgroundColor: isDarkMode ? 'rgba(0, 0, 0, 0.85)' : 'rgba(255, 255, 255, 0.95)',
-                            titleColor: isDarkMode ? '#fff' : '#000',
-                            bodyColor: isDarkMode ? '#ddd' : '#333',
-                            borderColor: isDarkMode ? '#444' : '#ddd',
+                            backgroundColor: isDarkMode ? 'rgba(28, 28, 30, 0.94)' : 'rgba(255, 255, 255, 0.96)',
+                            titleColor: isDarkMode ? '#f5f5f7' : '#1d1d1f',
+                            bodyColor: isDarkMode ? '#e5e5ea' : '#3a3a3c',
+                            borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.14)' : 'rgba(0, 0, 0, 0.10)',
                             borderWidth: 1,
                             padding: 10,
                             titleFont: { size: 14 },

@@ -4,11 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title data-i18n="admin.page_title">後台管理 - 私立中山紀念堂</title>
-    
+
     <link rel="icon" href="../../main/favicon/favicon.svg" type="image/svg+xml">
-    
     <link rel="stylesheet" href="admin.css">
-    
+
     <!-- System Dark/Light theme-color -->
     <meta name="theme-color" content="#f2f2f7" media="(prefers-color-scheme: light)">
     <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
@@ -62,7 +61,7 @@
             <div class="settings-card">
                 <div class="setting-item">
                     <div class="setting-info">
-                        <span class="setting-title" style="color: var(--primary);" data-i18n="admin.dev_mode_title">開發者模式</span>
+                        <span class="setting-title setting-title--accent" data-i18n="admin.dev_mode_title">開發者模式</span>
                         <span class="setting-desc" data-i18n="admin.dev_mode_desc">開啟後，您的瀏覽器將暫時無條件繞過發送頻率限制（60秒冷卻）。</span>
                     </div>
                     <label class="ios-switch">
@@ -74,22 +73,22 @@
 
             <!-- AI Debug Log Card -->
             <div class="settings-card" id="ai-debug-card" style="display: none;">
-                <div class="list-header" style="padding: 16px 20px 0; border-bottom: none;">
+                <div class="list-header list-header--card">
                     <h2 data-i18n="admin.ai_log_title">AI 判斷除錯日誌 (最近一次)</h2>
                 </div>
-                <div style="padding: 16px 20px 20px; display: flex; flex-direction: column; gap: 12px;">
-                    <div style="font-size: 0.85rem; color: var(--text-secondary);" id="ai-log-time" data-i18n="admin.ai_log_empty_time">時間: 無紀錄</div>
-                    <div style="background: var(--input-bg); padding: 12px; border-radius: 8px; font-size: 0.9rem; word-break: break-all; border: 1px solid var(--border);">
-                        <strong style="color: var(--text-secondary); display: block; margin-bottom: 6px;" data-i18n="admin.ai_log_raw_text">原始留言</strong> 
-                        <span id="ai-log-text" style="color: var(--text-primary);"></span>
+                <div class="admin-log-body">
+                    <div class="admin-log-time" id="ai-log-time" data-i18n="admin.ai_log_empty_time">時間: 無紀錄</div>
+                    <div class="admin-log-box">
+                        <strong class="admin-log-label" data-i18n="admin.ai_log_raw_text">原始留言</strong>
+                        <span id="ai-log-text" class="admin-log-value"></span>
                     </div>
-                    <div style="background: var(--input-bg); padding: 12px; border-radius: 8px; font-size: 0.9rem; word-break: break-all; border: 1px solid var(--border);">
-                        <strong style="color: var(--text-secondary); display: block; margin-bottom: 6px;" data-i18n="admin.ai_log_output">AI 輸出 (JSON)</strong>
-                        <span id="ai-log-reply" style="font-family: monospace; display: block; color: var(--text-primary); overflow-x: auto; white-space: pre-wrap;"></span>
+                    <div class="admin-log-box">
+                        <strong class="admin-log-label" data-i18n="admin.ai_log_output">AI 輸出 (JSON)</strong>
+                        <span id="ai-log-reply" class="admin-log-code"></span>
                     </div>
                 </div>
             </div>
-            
+
             <div class="settings-card">
                 <div class="setting-item">
                     <div class="setting-info">
@@ -102,7 +101,7 @@
                     </label>
                 </div>
 
-                <div class="setting-item" style="border-top: 1px solid var(--border);">
+                <div class="setting-item setting-item--divided">
                     <div class="setting-info">
                         <span class="setting-title" data-i18n="admin.auto_whitelist_title">特殊日期自動白名單</span>
                         <span class="setting-desc" data-i18n="admin.auto_whitelist_desc">於特定日期（如 06-04）自動強制切換為白名單模式。</span>
@@ -112,52 +111,52 @@
                         <span class="slider"></span>
                     </label>
                 </div>
-                
-                <div class="setting-item" id="auto-whitelist-dates-container" style="border-top: 1px solid var(--border); flex-direction: column; align-items: flex-start; gap: 8px;">
-                    <label style="font-size: 13px; color: var(--text-secondary);" data-i18n="admin.auto_whitelist_dates_label">設定日期 (MM-DD，以逗號分隔)</label>
-                    <input type="text" id="auto-whitelist-dates" class="ios-input" data-i18n-placeholder="admin.auto_whitelist_dates_placeholder" placeholder="例如: 06-04, 10-01" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--header-bg); color: var(--text-primary);">
+
+                <div class="setting-item setting-item--divided setting-item--stacked" id="auto-whitelist-dates-container">
+                    <label class="admin-field-label admin-field-label--tight" data-i18n="admin.auto_whitelist_dates_label">設定日期 (MM-DD，以逗號分隔)</label>
+                    <input type="text" id="auto-whitelist-dates" class="ios-input admin-input" data-i18n-placeholder="admin.auto_whitelist_dates_placeholder" placeholder="例如: 06-04, 10-01">
                 </div>
             </div>
 
             <div class="settings-card">
-                <div class="list-header" style="padding: 16px 20px 0; border-bottom: none;">
+                <div class="list-header list-header--card">
                     <h2 data-i18n="admin.wordlist_title">過濾名單管理</h2>
                 </div>
-                
+
                 <div class="setting-item">
                     <div class="setting-info">
                         <span class="setting-title" data-i18n="admin.base_wordlist_title">基礎黑名單 (.json)</span>
                         <span class="setting-desc"><span data-i18n="admin.word_count_prefix">目前詞彙數：</span><strong id="base-count-display">0</strong></span>
                     </div>
                     <div class="upload-wrapper">
-                        <input type="file" id="base-upload-input" accept=".json" style="display: none;">
+                        <input type="file" id="base-upload-input" accept=".json" class="admin-hidden-file">
                         <button class="ios-btn secondary small" onclick="document.getElementById('base-upload-input').click()" data-i18n="admin.upload_replace">上傳取代</button>
                     </div>
                 </div>
 
-                <div class="setting-item" style="border-top: 1px solid var(--border);">
+                <div class="setting-item setting-item--divided">
                     <div class="setting-info">
                         <span class="setting-title" data-i18n="admin.private_wordlist_title">隱私黑名單 (.json)</span>
                         <span class="setting-desc"><span data-i18n="admin.word_count_prefix">目前詞彙數：</span><strong id="private-count-display">0</strong></span>
                     </div>
                     <div class="upload-wrapper">
-                        <input type="file" id="private-upload-input" accept=".json" style="display: none;">
+                        <input type="file" id="private-upload-input" accept=".json" class="admin-hidden-file">
                         <button class="ios-btn secondary small" onclick="document.getElementById('private-upload-input').click()" data-i18n="admin.upload_replace">上傳取代</button>
                     </div>
                 </div>
             </div>
 
             <div class="settings-card">
-                <div class="list-header" style="padding: 16px 20px 0; border-bottom: none; display: flex; justify-content: space-between; align-items: center;">
+                <div class="list-header list-header--card list-header--flex">
                     <h2 data-i18n="admin.ai_matrix_title">AI 矩陣審查</h2>
-                    <button id="add-ai-btn" data-i18n-title="admin.add_ai_title" title="新增 AI 節點" style="background: none; border: none; cursor: pointer; color: var(--primary); padding: 4px;">
+                    <button id="add-ai-btn" class="icon-action-btn" data-i18n-title="admin.add_ai_title" title="新增 AI 節點">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <circle cx="12" cy="12" r="3"></circle>
                             <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
                         </svg>
                     </button>
                 </div>
-                
+
                 <div class="setting-item">
                     <div class="setting-info">
                         <span class="setting-title" data-i18n="admin.ai_enable_title">啟用 AI 矩陣</span>
@@ -180,48 +179,48 @@
                     </label>
                 </div>
 
-                <div id="ai-list-container" class="ios-list" style="margin: 0; padding-bottom: 12px; border-bottom: none;">
+                <div id="ai-list-container" class="ios-list admin-ai-list">
                     <!-- AI Models will be injected here -->
                 </div>
 
-                <div id="add-ai-form" class="setting-item" style="display: none; border-top: 1px solid var(--border); flex-direction: column; align-items: flex-start; gap: 12px; background: var(--hover-color);">
-                    <div style="width: 100%;">
-                        <label style="font-size: 13px; color: var(--text-secondary); margin-bottom: 4px; display: block;" data-i18n="admin.ai_endpoint_label">API 端點網址</label>
-                        <input type="text" id="ai-endpoint" class="ios-input" placeholder="https://api.openai.com/v1/chat/completions" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--header-bg); color: var(--text-primary);">
+                <div id="add-ai-form" class="setting-item setting-item--divided setting-item--form" style="display: none;">
+                    <div class="admin-field">
+                        <label class="admin-field-label" data-i18n="admin.ai_endpoint_label">API 端點網址</label>
+                        <input type="text" id="ai-endpoint" class="ios-input admin-input" placeholder="https://api.openai.com/v1/chat/completions">
                     </div>
-                    <div style="width: 100%;">
-                        <label style="font-size: 13px; color: var(--text-secondary); margin-bottom: 4px; display: block;" data-i18n="admin.ai_model_label">模型名稱</label>
-                        <input type="text" id="ai-model" class="ios-input" placeholder="gpt-4o-mini" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--header-bg); color: var(--text-primary);">
+                    <div class="admin-field">
+                        <label class="admin-field-label" data-i18n="admin.ai_model_label">模型名稱</label>
+                        <input type="text" id="ai-model" class="ios-input admin-input" placeholder="gpt-4o-mini">
                     </div>
-                    <div style="width: 100%;">
-                        <label style="font-size: 13px; color: var(--text-secondary); margin-bottom: 4px; display: block;" data-i18n="admin.ai_keys_label">API 金鑰 (一行一個)</label>
-                        <textarea id="ai-keys" class="ios-input" rows="3" placeholder="sk-xxxxxxx..." style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--header-bg); color: var(--text-primary); resize: vertical;"></textarea>
+                    <div class="admin-field">
+                        <label class="admin-field-label" data-i18n="admin.ai_keys_label">API 金鑰 (一行一個)</label>
+                        <textarea id="ai-keys" class="ios-input admin-input admin-textarea" rows="3" placeholder="sk-xxxxxxx..."></textarea>
                     </div>
-                    <div style="display: flex; gap: 12px; width: 100%;">
-                        <button class="ios-btn secondary" id="cancel-ai-btn" style="width: 50%; color: var(--text-secondary); background: rgba(118, 118, 128, 0.12);" data-i18n="common.cancel">取消</button>
-                        <button class="ios-btn primary" id="save-ai-btn" style="width: 50%;" data-i18n="admin.ai_save_btn">儲存並加入矩陣</button>
+                    <div class="admin-btn-row">
+                        <button class="ios-btn secondary secondary--neutral admin-btn-half" id="cancel-ai-btn" data-i18n="common.cancel">取消</button>
+                        <button class="ios-btn primary admin-btn-half" id="save-ai-btn" data-i18n="admin.ai_save_btn">儲存並加入矩陣</button>
                     </div>
                 </div>
             </div>
 
             <div class="settings-card">
-                <div class="list-header" style="padding: 16px 20px 0; border-bottom: none;">
+                <div class="list-header list-header--card">
                     <h2 data-i18n="admin.llm_card_title">自學黑名單紀錄</h2>
                 </div>
                 <div class="setting-item">
                     <div class="setting-info">
                         <span class="setting-title" data-i18n="admin.llm_subtitle">大語言模型自學黑名單</span>
-                        <span class="setting-desc"><span data-i18n="admin.llm_intercepted_prefix">已自動攔截了 </span><span id="llm-count-display" style="font-weight: 600; color: var(--primary);">0</span><span data-i18n="admin.llm_intercepted_suffix"> 個新詞彙</span></span>
+                        <span class="setting-desc"><span data-i18n="admin.llm_intercepted_prefix">已自動攔截了 </span><span id="llm-count-display" class="admin-llm-count">0</span><span data-i18n="admin.llm_intercepted_suffix"> 個新詞彙</span></span>
                     </div>
-                    <div style="display: flex; gap: 8px;">
-                        <button id="download-llm-btn" data-i18n-title="admin.llm_download_title" title="下載審查記錄" style="background: none; border: none; cursor: pointer; color: var(--primary); padding: 4px; display: flex; align-items: center; justify-content: center;">
+                    <div class="icon-action-group">
+                        <button id="download-llm-btn" class="icon-action-btn" data-i18n-title="admin.llm_download_title" title="下載審查記錄">
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                                 <polyline points="7 10 12 15 17 10"></polyline>
                                 <line x1="12" y1="15" x2="12" y2="3"></line>
                             </svg>
                         </button>
-                        <button id="clear-llm-btn" data-i18n-title="admin.llm_clear_title" title="一鍵清空" style="background: none; border: none; cursor: pointer; color: var(--red); padding: 4px; display: flex; align-items: center; justify-content: center;">
+                        <button id="clear-llm-btn" class="icon-action-btn icon-action-btn--danger" data-i18n-title="admin.llm_clear_title" title="一鍵清空">
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <polyline points="3 6 5 6 21 6"></polyline>
                                 <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
@@ -232,9 +231,9 @@
             </div>
 
             <div class="list-container">
-                <div class="list-header" style="display: flex; justify-content: space-between; align-items: center; padding-right: 16px;">
+                <div class="list-header list-header--flex">
                     <h2 data-i18n="admin.recent_danmaku">近期彈幕</h2>
-                    <button id="download-json-btn" data-i18n-title="admin.download_json_title" title="下載彈幕樣本 (.json)" style="background: none; border: none; cursor: pointer; color: var(--primary); padding: 4px;">
+                    <button id="download-json-btn" class="icon-action-btn" data-i18n-title="admin.download_json_title" title="下載彈幕樣本 (.json)">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                             <polyline points="7 10 12 15 17 10"></polyline>
@@ -250,9 +249,9 @@
         </main>
     </div>
 
-    <div id="captcha-modal-overlay" class="modal-overlay" style="display: none; align-items: center; justify-content: center; z-index: 9999;">
-        <div class="captcha-modal-content" style="background: transparent; width: 440px; height: 620px; display: flex; justify-content: center; align-items: center;">
-            <iframe id="captcha-iframe" src="../../captcha/index.html" style="border: none; width: 100%; height: 100%; border-radius: 14px; background: transparent;" allowtransparency="true"></iframe>
+    <div id="captcha-modal-overlay" class="modal-overlay" style="display: none;">
+        <div class="captcha-modal-content">
+            <iframe id="captcha-iframe" class="captcha-iframe" src="../../captcha/index.html" allowtransparency="true"></iframe>
         </div>
     </div>
 
@@ -267,16 +266,16 @@
                 </div>
                 <div id="learn-help-popover" class="history-popover">
                     <h4 data-i18n="admin.ai_learn_help_title">AI 監督學習功能</h4>
-                    <div style="font-size: 0.85rem; color: var(--text-secondary, #555); line-height: 1.4; white-space: normal;" data-i18n="admin.ai_learn_help_desc">
+                    <div class="admin-help-text" data-i18n="admin.ai_learn_help_desc">
                         當您發現有問題的留言時，您可以在此輸入原因。系統會將該句留言與您的原因提交給大語言模型 (LLM)，模型會自動拆解並提取出核心的「敏感詞」，然後永久加入您的自學黑名單中，未來包含該詞的留言都會被直接阻擋。
                     </div>
                 </div>
             </div>
-            
+
             <div class="sheet-content">
                 <textarea id="learn-reason-input" class="ios-textarea" data-i18n-placeholder="admin.ai_learn_placeholder" placeholder="請輸入違規原因，例如：這是影射XXX的諧音，或直接貼上敏感詞" maxlength="100"></textarea>
             </div>
-            
+
             <div class="sheet-footer">
                 <button id="learn-cancel-btn" class="macos-cancel-btn" data-i18n="common.cancel">取消</button>
                 <button id="learn-submit-btn" class="ios-submit-btn" data-i18n="common.submit">提交</button>

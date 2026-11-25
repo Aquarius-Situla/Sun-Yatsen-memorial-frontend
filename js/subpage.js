@@ -13,9 +13,9 @@
 function getMarkdownStyles(isLight) {
     if (isLight) {
         return `.markdown-body {
-            color: #2c1810 !important;
+            color: #1d1d1f !important;
             background-color: transparent !important;
-            font-family: -apple-system, BlinkMacSystemFont, "PingFang TC", "PingFang SC", "Microsoft JhengHei", sans-serif !important;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang TC", "PingFang SC", "Microsoft JhengHei", sans-serif !important;
             line-height: 1.8;
             padding: 0 15px !important;
             overflow-wrap: break-word !important;
@@ -23,27 +23,27 @@ function getMarkdownStyles(isLight) {
             word-break: break-all !important;
         }
         .markdown-body h1, .markdown-body h2 {
-            color: #2c1810 !important;
-            border-bottom-color: #c4a876 !important;
+            color: #000000 !important;
+            border-bottom-color: rgba(0, 0, 0, 0.12) !important;
             padding-bottom: 10px;
         }
-        .markdown-body a { color: #b8860b !important; text-decoration: none; }
+        .markdown-body a { color: #007aff !important; text-decoration: none; }
         .markdown-body a:hover { text-decoration: underline; }
         .markdown-body ul { margin-bottom: 20px !important; }
         .markdown-body li { margin-bottom: 8px !important; }
         .markdown-body blockquote {
-            border-left: 4px solid #b8860b !important;
-            color: #5a3e2a !important;
-            background: rgba(184,134,11,0.08) !important;
+            border-left: 3px solid #1d1d1f !important;
+            color: #6e6e73 !important;
+            background: rgba(0, 0, 0, 0.04) !important;
             padding: 12px 20px !important;
             border-radius: 0 6px 6px 0 !important;
         }` + (document.querySelector('.festival-hero') ? `
         .markdown-body > h1:first-child { display: none !important; }` : '');
     } else {
         return `.markdown-body {
-            color: #e5e7eb !important;
+            color: #f5f5f7 !important;
             background-color: transparent !important;
-            font-family: -apple-system, BlinkMacSystemFont, "PingFang TC", "PingFang SC", "Microsoft JhengHei", sans-serif !important;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang TC", "PingFang SC", "Microsoft JhengHei", sans-serif !important;
             line-height: 1.8;
             padding: 0 15px !important;
             overflow-wrap: break-word !important;
@@ -52,17 +52,17 @@ function getMarkdownStyles(isLight) {
         }
         .markdown-body h1, .markdown-body h2 {
             color: #ffffff !important;
-            border-bottom-color: #333333 !important;
+            border-bottom-color: rgba(255, 255, 255, 0.14) !important;
             padding-bottom: 10px;
         }
-        .markdown-body a { color: #f1c40f !important; text-decoration: none; }
+        .markdown-body a { color: #0a84ff !important; text-decoration: none; }
         .markdown-body a:hover { text-decoration: underline; }
         .markdown-body ul { margin-bottom: 20px !important; }
         .markdown-body li { margin-bottom: 8px !important; }
         .markdown-body blockquote {
-            border-left: 4px solid #b8860b !important;
-            color: #cccccc !important;
-            background: rgba(184,134,11,0.07) !important;
+            border-left: 3px solid #f5f5f7 !important;
+            color: #aeaeb2 !important;
+            background: rgba(255, 255, 255, 0.06) !important;
             padding: 12px 20px !important;
             border-radius: 0 6px 6px 0 !important;
         }` + (document.querySelector('.festival-hero') ? `
@@ -120,41 +120,16 @@ export function initSubpage(options) {
 
     if (!isMenuHubPage) {
         document.body.classList.add('is-subpage');
-        const tabBarEl = document.getElementById('apple-tab-bar');
-        if (tabBarEl && isMobileLayout()) {
-            tabBarEl.style.setProperty('display', 'none', 'important');
-        }
     } else {
         document.body.classList.remove('is-subpage');
-        const tabBarEl = document.getElementById('apple-tab-bar');
-        if (tabBarEl) {
-            tabBarEl.style.removeProperty('display');
-        }
         /* Synchronize standalone viewport on root hub pages */
         syncStandaloneTabBar();
     }
 
-    /* Guarantee Apple Native Top Navigation Bar and Back Link are visible and interactable on mobile only */
+    /* Guarantee Apple Native Top Navigation Bar visibility on mobile via CSS layers */
     const topNav = document.querySelector('.apple-top-nav');
-    if (topNav) {
-        if (isMobileLayout()) {
-            topNav.classList.remove('nav-hidden');
-            topNav.style.removeProperty('display');
-            topNav.style.setProperty('display', 'flex', 'important');
-        } else {
-            topNav.style.setProperty('display', 'none', 'important');
-        }
-    }
-    const navBackLink = document.querySelector('.apple-top-nav .nav-back-link');
-    if (navBackLink) {
-        if (isMobileLayout()) {
-            navBackLink.style.setProperty('display', 'flex', 'important');
-            navBackLink.style.setProperty('visibility', 'visible', 'important');
-            navBackLink.style.setProperty('opacity', '1', 'important');
-            navBackLink.style.setProperty('pointer-events', 'auto', 'important');
-        } else {
-            navBackLink.style.setProperty('display', 'none', 'important');
-        }
+    if (topNav && isMobileLayout()) {
+        topNav.classList.remove('nav-hidden');
     }
 
     /* Dismiss any full-page activity indicator from prior mobile navigation */

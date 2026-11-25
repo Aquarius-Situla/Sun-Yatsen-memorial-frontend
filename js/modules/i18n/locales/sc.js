@@ -40,7 +40,6 @@ const locale = {
         'sidebar.announcement': '最新公告',
         'sidebar.library': '文献资料库',
         'sidebar.settings': '系统设置',
-        'sidebar.exhibit_biography': '国父生平传记',
         'sidebar.exhibit_xinhai': '辛亥革命风云',
         'sidebar.exhibit_whampoa': '黄埔建军岁月',
         'sidebar.exhibit_mayfourth': '五四新文化运动',

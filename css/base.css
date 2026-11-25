@@ -12,29 +12,33 @@
 /* ============================================================================
  * Global Reset & Base Document Typography
  * ============================================================================ */
+@layer base {
+    *,
+    *::before,
+    *::after {
+        box-sizing: border-box;
+    }
 
-*,
-*::before,
-*::after {
-    box-sizing: border-box;
-}
-
-html, body {
-    margin: 0;
-    padding: 0;
-    background-color: var(--sys-bg, #111111);
-    color: var(--sys-text, #ffffff);
-    font-family: var(--sys-font-family);
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+    html,
+    body {
+        margin: 0;
+        padding: 0;
+        background-color: var(--sys-bg, #000000);
+        color: var(--sys-text, #f5f5f7);
+        font-family: var(--sys-font-family);
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
 }
 
 /* ============================================================================
  * Page Transition Animation
  * ============================================================================ */
-.page-transition {
-    transition: var(--sys-transition-page) !important;
-    transform: translateX(100%) !important;
-    opacity: 0 !important;
-    pointer-events: none !important;
+@layer overrides {
+    .page-transition {
+        transition: var(--sys-transition-page);
+        transform: translateX(100%);
+        opacity: 0;
+        pointer-events: none;
+    }
 }
